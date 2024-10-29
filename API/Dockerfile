@@ -9,6 +9,6 @@ COPY . .
 
 RUN go build -o API.
 
-EXPOSE 8081
+EXPOSE 5001
 
 CMD ["./main"]

@@ -6,10 +6,8 @@ import (
 
 func main() {
 	r := gin.Default()
-	r.GET("/api", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "Hello from the backend!",
-		})
-	})
-	r.Run()
+
+	routes(r)
+
+	_ = r.Run(":5001")
 }

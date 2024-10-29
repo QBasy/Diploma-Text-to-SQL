@@ -10,6 +10,6 @@ COPY . .
 
 RUN go build -o database-service .
 
-EXPOSE 8080
+EXPOSE 5002
 
 CMD ["./main"]

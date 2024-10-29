@@ -1,0 +1,32 @@
+services:
+  database-service:
+    build:
+      context: ./database-service
+    environment:
+      - HOST=db
+      - USER=your_db_user
+      - PASSWORD=your_db_password
+      - PORT=5432
+    depends_on:
+      - db
+
+  text-to-sql-service:
+    build:
+      context: ./text-to-sql-service
+    ports:
+      - "8000:8000"
+
+  diploma-frontend:
+    build:
+      context: ./diploma-frontend
+    ports:
+      - "3000:5000"
+
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: item_finder
+      POSTGRES_USER: your_db_user
+      POSTGRES_PASSWORD: your_db_password
+    ports:
+      - "5432:5432"

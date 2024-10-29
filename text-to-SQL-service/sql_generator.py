@@ -1,9 +1,8 @@
-# app/sql_generator.py
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+from config import MODEL_NAME
 
-# Load a pretrained model
-tokenizer = AutoTokenizer.from_pretrained("microsoft/azure-openai-codex")
-model = AutoModelForSeq2SeqLM.from_pretrained("microsoft/azure-openai-codex")
+tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+model = AutoModelForSeq2SeqLM.from_pretrained(MODEL_NAME)
 
 def generate_sql_query(text_query: str) -> str:
     inputs = tokenizer(text_query, return_tensors="pt")

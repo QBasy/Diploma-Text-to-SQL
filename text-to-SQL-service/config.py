@@ -1,3 +1,2 @@
-import os
+MODEL_DIR = "./text_to_sql_model"
 
-MODEL_NAME = os.getenv("MODEL_NAME", "microsoft/azure-openai-codex")

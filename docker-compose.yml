@@ -1,32 +1,65 @@
+version: "3.8"
+
 services:
+  API:
+    build:
+      context: ./API
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=japierdole
+      - DB_NAME=mvpdiploma
+    ports:
+      - "5001:5001"
+    depends_on:
+      - db
+
   database-service:
     build:
       context: ./database-service
     environment:
-      - HOST=db
-      - USERNAME=your_db_user
-      - PASSWORD=your_db_password
-      - PORT=5432
+      - HOST=localhost
+      - USERNAME=postgres
+      - PASSWORD=japierdole
+      - PORT=5002
     depends_on:
       - db
+    ports:
+      - "5002:5002"
 
   text-to-sql-service:
     build:
       context: ./text-to-sql-service
+    environment:
+      - API_HOST=api
+      - API_PORT=8080
     ports:
-      - "8000:8000"
+      - "5003:5003"
+    depends_on:
+      - API
 
   diploma-frontend:
     build:
       context: ./diploma-frontend
     ports:
-      - "3000:5000"
+      - "5173:5173"
+    depends_on:
+      - API
+    environment:
+      VITE_API_URL=http://localhost:8080
 
   db:
     image: postgres:latest
     environment:
-      POSTGRES_DB: item_finder
-      POSTGRES_USER: your_db_user
-      POSTGRES_PASSWORD: your_db_password
+      POSTGRES_DB: mvpdiploma
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD=japierdole
     ports:
       - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
+    driver: local

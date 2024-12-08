@@ -9,6 +9,7 @@ func routes(router *gin.Engine) {
 	{
 		api.POST("/login", loginHandler)
 		api.POST("/register", registerHandler)
+		api.POST("/query", queryToSQLHandler)
 	}
 
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -100,6 +101,42 @@ func queryToSQLHandler(c *gin.Context) {
 		return
 	}
 
-	// Отправка полученного SQL запроса в ответ
-	c.JSON(http.StatusOK, result)
+	sqlQuery, ok := result["sql"].(string)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "SQL query conversion failed"})
+		return
+	}
+
+	newData, err := executeSQLQuery(sqlQuery)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to execute SQL query"})
+		return
+	}
+
+	c.JSON(http.StatusOK, newData)
+}
+
+func executeSQLQuery(sqlQuery string) (interface{}, error) {
+	data := map[string]string{"sql": sqlQuery}
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal query: %v", err)
+	}
+
+	resp, err := http.Post("http://localhost:5002/execute-query", "application/json", bytes.NewBuffer(jsonData))
+	if err != nil {
+		return nil, fmt.Errorf("failed to communicate with DatabaseService: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("error executing query in DatabaseService: %v", resp.Status)
+	}
+
+	var result interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %v", err)
+	}
+
+	return result, nil
 }

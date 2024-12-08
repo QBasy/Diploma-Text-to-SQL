@@ -1,4 +1,6 @@
 <script>
+    let isRegister = false;
+
     import {slide} from "svelte/transition";
 
     let isAuth = true;
@@ -15,68 +17,85 @@
         /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(regEmail)
     }
 
-    function toggleAuth() {
-        isAuth = !isAuth;
+    function toggleForm() {
+        isRegister = !isRegister;
     }
 </script>
 
-<section class="container p-6 mx-auto w-full">
-    <div class="mx-auto p-2 bg-gray-100 rounded-3xl flex flex-col">
-        {#if isAuth}
-            <div class="m-2 bg-gray-300 p-6 w-1/4 border-2 border-gray-400 rounded-3xl" transition:slide={{ duration: 1500 }}>
-                <form class="mx-auto">
-                    <div class="border-2 border-gray-400 bg-gray-200 rounded-3xl m-2 p-2 w-full flex">
-                        <strong>Username</strong>
-                        <label for="username">
-                            <input class="bg-white border-2 border-gray-400 rounded-3xl mx-2 px-2 w-full flex" type="text" required>
-                        </label>
-                    </div>
-                    <div class="border-2 border-gray-400 bg-gray-200 rounded-3xl m-2 p-2 w-full flex">
-                        <strong>Password</strong>
-                        <label for="password">
-                            <input class="bg-white border-2 border-gray-400 rounded-3xl mx-2 px-2 w-full flex" type="text" required>
-                        </label>
-                    </div>
-                </form>
+<div class="flex items-center justify-center h-screen">
+    <div class="w-full max-w-md">
+        <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+            <div class="flex justify-between mb-4">
+                <h2 class="text-xl font-bold">
+                    {#if isRegister}
+                        Register
+                    {:else}
+                        Sign Up
+                    {/if}
+                </h2>
+                <button
+                        on:click={toggleForm}
+                        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                    {#if isRegister}
+                        Sign In
+                    {:else}
+                        Register
+                    {/if}
+                </button>
             </div>
-        {:else if !isAuth}
-            <div class="m-2 bg-gray-300 p-6 w-1/4 border-2 border-gray-400 rounded-3xl items-center" transition:slide={{ duration: 1500 }}>
-                <form class="mx-auto">
-                    <div class="mx-auto border-2 border-gray-400 bg-gray-200 rounded-3xl m-2 p-2 w-full flex">
-                        <strong>Username</strong>
-                        <label for="regUsername">
-                            <input class="bg-white border-2 border-gray-400 rounded-3xl mx-2 px-2 w-full flex" type="text" required>
+
+            <form
+                    class="transition-all duration-500 ease-in-out"
+                    style:transform={isRegister ? 'translateX(100%)' : 'translateX(0)'}>
+                {#if isRegister}
+                    <!-- Registration form fields -->
+                    <div class="mb-4">
+                        <label class="block text-gray-700 font-bold mb-2" for="name">
+                            Name
                         </label>
+                        <input
+                                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                id="name"
+                                type="text"
+                                placeholder="Enter your name" />
                     </div>
-                    <div class="mx-auto border-2 border-gray-400 bg-gray-200 rounded-3xl m-2 p-2 w-full flex">
-                        <strong>Email</strong>
-                        <label for="regEmail">
-                            <input class="bg-white border-2 border-gray-400 rounded-3xl mx-2 px-2 w-full flex" type="email" required>
-                        </label>
-                    </div>
-                    <div class="mx-auto border-2 border-gray-400 bg-gray-200 rounded-3xl m-2 p-2 w-full flex">
-                        <strong>Password</strong>
-                        <label for="regPassword">
-                            <input class="bg-white border-2 border-gray-400 rounded-3xl mx-2 px-2 w-full flex" type="password" required>
-                        </label>
-                    </div>
-                    <div class="mx-auto border-2 border-gray-400 bg-gray-200 rounded-3xl m-2 p-2 w-full flex">
-                        <strong>Confirm Password</strong>
-                        <label for="confirmPassword">
-                            <input class="bg-white border-2 border-gray-400 rounded-3xl mx-2 px-2 w-full flex" type="password" required>
-                        </label>
-                    </div>
-                </form>
-            </div>
-        {/if}
-        <div class="p-6 mx-auto">
-            <button class="bg-blue-200 p-2 rounded-3xl" on:click={toggleAuth}>
-                {#if isAuth}
-                Register
                 {:else}
-                Login
+                    <!-- Sign-up form fields -->
+                    <div class="mb-4">
+                        <label class="block text-gray-700 font-bold mb-2" for="email">
+                            Email
+                        </label>
+                        <input
+                                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                id="email"
+                                type="email"
+                                placeholder="Enter your email" />
+                    </div>
                 {/if}
-            </button>
+
+                <div class="mb-6">
+                    <label class="block text-gray-700 font-bold mb-2" for="password">
+                        Password
+                    </label>
+                    <input
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            id="password"
+                            type="password"
+                            placeholder="Enter your password" />
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <button
+                            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                            type="button">
+                        {#if isRegister}
+                            Register
+                        {:else}
+                            Sign Up
+                        {/if}
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
-</section>
+</div>

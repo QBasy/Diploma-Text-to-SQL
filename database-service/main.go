@@ -3,6 +3,7 @@ package main
 import (
 	"database-service/models"
 	"fmt"
+	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"log"
@@ -13,19 +14,34 @@ import (
 var database *gorm.DB
 
 func initDB() {
-	host, user, password, dbName, port := os.Getenv("HOST"), os.Getenv("USER"), os.Getenv("PASSWORD"), os.Getenv("DATABASE_NAME"), os.Getenv("PORT")
+	host, username, password, dbName, port := os.Getenv("HOST"), os.Getenv("USERNAME"), os.Getenv("PASSWORD"), os.Getenv("DATABASE_NAME"), os.Getenv("PORT")
 
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable", host, user, password, dbName, port)
+	username = "postgres"
 
-	if db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{}); err != nil {
-		panic("failed to connect database")
-	} else {
-		_ = db.AutoMigrate(&models.User{}, &models.Item{})
-		database = db
+	log.Printf("Host: %s, Username: %s, Password: %s, Database: %s, Port: %s\n", host, username, password, dbName, port)
+
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable", host, username, password, dbName, port)
+	log.Println("DSN:", dsn)
+
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if err != nil {
+		log.Fatalf("failed to connect to database: %v", err)
 	}
+
+	if err := db.AutoMigrate(&models.User{}, &models.Item{}); err != nil {
+		log.Fatalf("failed to migrate database: %v", err)
+	}
+
+	database = db
+	log.Println("Database connection established successfully")
 }
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		return
+	}
+
 	initDB()
 
 	routes(database)

@@ -1,8 +1,0 @@
-fastapi~=0.115.4
-pydantic~=2.9.2
-transformers~=4.46.0
-torch
-uvicorn
-psycopg2
-sqlalchemy
-datasets~=3.0.2

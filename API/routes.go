@@ -5,11 +5,18 @@ import (
 )
 
 func routes(router *gin.Engine) {
-	api := router.Group("/user")
+	textToSQLApi := router.Group("/text-to-sql")
 	{
-		api.POST("/login", loginHandler)
-		api.POST("/register", registerHandler)
-		api.POST("/query", queryToSQLHandler)
+		textToSQLApi.POST("/convert", convertToSQLHandler)
+		textToSQLApi.GET("/health", textToSQLHealthHandler)
 	}
 
+	dbApi := router.Group("/database")
+	{
+		dbApi.POST("/execute-query", executeCustomSQLHandler)
+		dbApi.GET("/items", getItemsHandler)
+		dbApi.POST("/items/create", createItemHandler)
+		dbApi.GET("/users", getUsersHandler)
+		dbApi.POST("/users/create", createUserHandler)
+	}
 }

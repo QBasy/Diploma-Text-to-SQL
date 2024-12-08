@@ -33,3 +33,31 @@ export const itemService = {
         return response.data;
     }
 };
+
+export const authorization = {
+    login: async (email: string, password: string, rememberMe: boolean) => {
+        try {
+            const response = await apiClient.post('/auth/login', { email, password, rememberMe });
+            const { token } = response.data;
+
+            if (rememberMe) {
+                document.cookie = `token=${token};path=/;max-age=${60 * 60 * 24 * 30}`;
+            } else {
+                sessionStorage.setItem('token', token);
+            }
+            return response.data;
+        } catch (error) {
+            console.error('Login error:', error);
+            throw error;
+        }
+    },
+    register: async (name: string, email: string, password: string) => {
+        try {
+            const response = await apiClient.post('/auth/register', { name, email, password });
+            return response.data;
+        } catch (error) {
+            console.error('Registration error:', error);
+            throw error;
+        }
+    }
+};

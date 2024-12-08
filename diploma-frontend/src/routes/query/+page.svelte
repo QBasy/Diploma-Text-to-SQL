@@ -1,6 +1,6 @@
 <script lang="ts">
     import { writable } from 'svelte/store';
-    import { textToSqlService, customQueryService } from '$lib/api';
+    import { textToSqlService, customQueryService } from '../../lib/api';
 
     interface SQLResult {
         columns: string[];

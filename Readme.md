@@ -12,7 +12,7 @@
 
 ### Structure
 
-```go
+```
 Diploma-text-to-SQL/
 	// A service that accepts requests from frontend 
 	// and links database-service and text-to-sql

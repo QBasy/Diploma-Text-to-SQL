@@ -1,21 +1,20 @@
 <script>
 	import '../app.css';
+    import { getAuthToken() }
     import Navbar from "../lib/Navbar.svelte";
     import Footer from "../lib/Footer.svelte";
     import {onMount} from "svelte";
 	let { children } = $props();
 
-    function getAuthToken() {
-        const cookies = document.cookie.split('; ');
-        const tokenCookie = cookies.find(row => row.startsWith('token='));
-        return tokenCookie ? tokenCookie.split('=')[1] : null;
-    }
-
     onMount(() => {
-        if (getAuthToken) {
-            
+        const token = getAuthToken();
+        if (token) {
+            console.log('User is authenticated');
+        } else {
+            console.log('User is not authenticated');
         }
-    })
+    });
+
 </script>
 
 <Navbar/>

@@ -3,7 +3,7 @@
 ## Text-to-SQL
 
 ### How to run?
-#### You can and run the .sh file by using CMD
+#### You can run the .sh file by using CMD
 ```shell
 "C:\Program Files\Git\bin\bash.exe" $PATHTOPROJECT"/Diploma-text-to-SQL/start.sh
 ```

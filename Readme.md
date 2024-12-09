@@ -12,6 +12,9 @@
 
 ### Structure
 
+![image](https://github.com/user-attachments/assets/76d19dfa-8c7d-4f73-9271-80a9c865e593)
+
+
 ```assembly
 Diploma-text-to-SQL/
 	// A service that accepts requests from frontend 

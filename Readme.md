@@ -19,7 +19,7 @@ Diploma-text-to-SQL/
 	// Go & Gin
     API/
         test/
-            connection.go
+            handlers_test.go
         main.go
         routes.go
         handlers.go

@@ -33,10 +33,10 @@ Diploma-text-to-SQL/
 	// A service for direct work with the database
 	// Go & GORM
     database-service/
-        /models
+        models/
             user.go
             item.go
-        /controllers
+        controllers/
             itemController.go
             userController.go
             customController.go

@@ -22,12 +22,24 @@
     }
 
     async function login() {
-        await authorization.login(email, password, rememberMe);
+        try {
+            await authorization.login(email, password, rememberMe);
+            console.log("Logged in...");
+        } catch (e) {
+            let message = "User not Found"
+            alert(message)
+        }
     }
 
     async function register() {
         if (password_repeat === password_register) {
-            await authorization.register(name_register, email_register, password_register)
+            try {
+                await authorization.register(name_register, email_register, password_register);
+                console.log("Registration success");
+            } catch (e) {
+                let message = "Error on creating user " + e;
+                alert(message);
+            }
         } else {
             alert("Passwords are not same")
         }

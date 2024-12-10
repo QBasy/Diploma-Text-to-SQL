@@ -1,6 +1,6 @@
 <script>
 	import '../app.css';
-    import { getAuthToken() }
+    import { getAuthToken } from '$lib/api';
     import Navbar from "../lib/Navbar.svelte";
     import Footer from "../lib/Footer.svelte";
     import {onMount} from "svelte";

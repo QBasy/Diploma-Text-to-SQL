@@ -13,15 +13,26 @@ import (
 
 var database *gorm.DB
 
+func getEnv(key, fallback string) string {
+	value := os.Getenv(key)
+	if value == "" {
+		if fallback == "" {
+			log.Fatalf("Environment variable %s is not set", key)
+		}
+		return fallback
+	}
+	return value
+}
+
 func initDB() {
-	host, username, password, dbName, port := os.Getenv("HOST"), os.Getenv("USERNAME"), os.Getenv("PASSWORD"), os.Getenv("DATABASE_NAME"), os.Getenv("PORT")
+	host := getEnv("DB_HOST", "")
+	user := getEnv("DB_USERNAME", "")
+	password := getEnv("DB_PASSWORD", "")
+	dbname := getEnv("DB_NAME", "")
+	port := getEnv("DB_PORT", "")
 
-	username = "postgres"
-
-	log.Printf("Host: %s, Username: %s, Password: %s, Database: %s, Port: %s\n", host, username, password, dbName, port)
-
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable", host, username, password, dbName, port)
-	log.Println("DSN:", dsn)
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
+		host, user, password, dbname, port)
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {

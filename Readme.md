@@ -3,7 +3,7 @@
 ## Text-to-SQL
 
 ### How to run?
-#### You can and run the .sh file by using CMD
+#### You can run the .sh file by using CMD
 ```shell
 "C:\Program Files\Git\bin\bash.exe" $PATHTOPROJECT"/Diploma-text-to-SQL/start.sh
 ```
@@ -11,6 +11,9 @@
 
 
 ### Structure
+
+![image](https://github.com/user-attachments/assets/76d19dfa-8c7d-4f73-9271-80a9c865e593)
+
 
 ```go
 Diploma-text-to-SQL/
@@ -30,10 +33,10 @@ Diploma-text-to-SQL/
 	// A service for direct work with the database
 	// Go & GORM
     database-service/
-        /models
+        models/
             user.go
             item.go
-        /controllers
+        controllers/
             itemController.go
             userController.go
             customController.go

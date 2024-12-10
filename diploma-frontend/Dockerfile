@@ -1,16 +1,25 @@
-FROM node:20
+FROM node:20 AS builder
 
 WORKDIR /app
 
 COPY package*.json ./
 
-# Install dependencies
 RUN npm install
 
 COPY . .
 
-RUN npm run dev
+RUN npm run build
 
-EXPOSE 5173
+FROM node:20 AS production
 
-CMD ["npm", "run", "preview"]
+WORKDIR /app
+
+COPY --from=builder /app /app
+
+RUN npm install
+
+
+
+EXPOSE 3000
+
+CMD ["npm", "run", "dev"]

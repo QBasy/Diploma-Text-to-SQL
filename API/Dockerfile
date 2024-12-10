@@ -7,8 +7,8 @@ RUN go mod download
 
 COPY . .
 
-RUN go build -o API.
+RUN go build -o API
 
 EXPOSE 5001
 
-CMD ["./main"]
+CMD ["./API"]

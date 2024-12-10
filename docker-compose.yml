@@ -1,9 +1,8 @@
-version: "3.8"
-
 services:
-  API:
+  api:
     build:
       context: ./API
+      dockerfile: Dockerfile
     environment:
       - DB_HOST=db
       - DB_PORT=5432
@@ -12,54 +11,59 @@ services:
       - DB_NAME=mvpdiploma
     ports:
       - "5001:5001"
+    networks:
+      - default
     depends_on:
       - db
 
-  database-service:
+  database_service:
     build:
       context: ./database-service
+      dockerfile: Dockerfile
     environment:
-      - HOST=localhost
-      - USERNAME=postgres
-      - PASSWORD=japierdole
-      - PORT=5002
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=japierdole
+      - DB_NAME=mvpdiploma
     depends_on:
       - db
     ports:
       - "5002:5002"
 
-  text-to-sql-service:
+  text_to_sql_service:
     build:
       context: ./text-to-sql-service
+      dockerfile: Dockerfile
     environment:
       - API_HOST=api
-      - API_PORT=8080
+      - API_PORT=5001
     ports:
       - "5003:5003"
     depends_on:
-      - API
+      - api
 
-  diploma-frontend:
+  diploma_frontend:
     build:
       context: ./diploma-frontend
+      dockerfile: Dockerfile
     ports:
-      - "5173:5173"
+      - "5005:5173"
     depends_on:
-      - API
+      - api
     environment:
-      VITE_API_URL=http://localhost:8080
+      - VITE_API_URL=http://diploma-text-to-sql-api-1:5173
 
   db:
     image: postgres:latest
     environment:
-      POSTGRES_DB: mvpdiploma
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD=japierdole
+      - POSTGRES_DB=mvpdiploma
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=japierdole
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-
 volumes:
   postgres_data:
     driver: local

@@ -1,4 +1,3 @@
-# Start from the official Go image for development
 FROM golang:1.21-alpine
 
 WORKDIR /app
@@ -8,8 +7,8 @@ RUN go mod download
 
 COPY . .
 
-RUN go build -o database-service .
+RUN go build -o database-service
 
 EXPOSE 5002
 
-CMD ["./main"]
+CMD ["./database-service"]

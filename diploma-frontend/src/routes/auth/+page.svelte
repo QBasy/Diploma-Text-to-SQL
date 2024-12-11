@@ -1,7 +1,9 @@
 <script lang="ts">
     import { slide } from "svelte/transition";
     import { authorization } from "../../lib/api.js";
+    import {goto} from "$app/navigation";
 
+    let messageBox = '';
     let isRegister: boolean = false;
 
     let password: string = '';
@@ -24,10 +26,10 @@
     async function login() {
         try {
             await authorization.login(email, password, rememberMe);
-            console.log("Logged in...");
+            messageBox = "Login..."
+            await goto('/');
         } catch (e) {
-            let message = "User not Found"
-            alert(message)
+            messageBox = "User not Found"
         }
     }
 
@@ -35,13 +37,12 @@
         if (password_repeat === password_register) {
             try {
                 await authorization.register(name_register, email_register, password_register);
-                console.log("Registration success");
+                messageBox = "User have successfully registered, now you can Login"
             } catch (e) {
-                let message = "Error on creating user " + e;
-                alert(message);
+                messageBox = "Error on creating user " + e;
             }
         } else {
-            alert("Passwords are not same")
+            messageBox = "Passwords are not same";
         }
     }
 
@@ -126,6 +127,9 @@
                     <label class="text-gray-700 font-bold mb-2" for="rememberMe">Remember Me</label>
                 </div>
             {/if}
+            <div class="flex items-center justify-between text-red-500">
+                <p>{messageBox}</p>
+            </div>
 
             <div class="flex items-center justify-between">
                 <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"

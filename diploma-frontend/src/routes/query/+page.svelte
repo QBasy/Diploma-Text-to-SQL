@@ -1,6 +1,19 @@
 <script lang="ts">
+    import { redirect } from "@sveltejs/kit";
+
+    async function load({ cookies }) {
+        const token = cookies.get('token');
+
+        if (!token) {
+            throw redirect(302, '/auth');
+        }
+
+        return {};
+    }
+
     import { writable } from 'svelte/store';
     import { textToSqlService, customQueryService } from '../../lib/api';
+    import {onMount} from "svelte";
 
     interface SQLResult {
         columns: string[];
@@ -25,12 +38,15 @@
             console.error(err);
         }
     }
+
+    onMount(() => {
+        load
+    })
 </script>
 
 <div class="container mx-auto p-6 space-y-8">
     <h1 class="text-3xl font-bold">Integrated Management System</h1>
 
-    <!-- Text-to-SQL Section -->
     <section class="bg-gray-100 p-4 rounded shadow">
         <h2 class="text-2xl font-semibold mb-4">Text-to-SQL</h2>
         <div>

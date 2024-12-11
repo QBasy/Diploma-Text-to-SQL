@@ -3,7 +3,6 @@ package controllers
 import (
 	"database-service/models"
 	"encoding/json"
-	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
@@ -30,12 +29,10 @@ func (ac *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user.Password = string(hashedPassword)
-
 	if err := ac.DB.Create(&user).Error; err != nil {
 		http.Error(w, "Failed to create user", http.StatusInternalServerError)
 		return
 	}
-
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]string{"message": "User registered successfully"})
 }
@@ -44,17 +41,14 @@ func (ac *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 func (ac *AuthController) Login(w http.ResponseWriter, r *http.Request) {
 	var reqUser models.User
 	var dbUser models.User
-
 	if err := json.NewDecoder(r.Body).Decode(&reqUser); err != nil {
 		http.Error(w, "Invalid request format", http.StatusBadRequest)
 		return
 	}
-
 	if err := ac.DB.Where("email = ?", reqUser.Email).First(&dbUser).Error; err != nil {
 		http.Error(w, "Invalid email or password", http.StatusUnauthorized)
 		return
 	}
-
 	if err := bcrypt.CompareHashAndPassword([]byte(dbUser.Password), []byte(reqUser.Password)); err != nil {
 		http.Error(w, "Invalid email or password", http.StatusUnauthorized)
 		return
@@ -66,7 +60,6 @@ func (ac *AuthController) Login(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to generate token", http.StatusInternalServerError)
 		return
 	}
-
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"token": token})
 }
@@ -79,7 +72,6 @@ func (ac *AuthController) generateJWTToken(userID uint) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	signedToken, err := token.SignedString(ac.JwtSecret)
 	if err != nil {
-		fmt.Println(err)
 		return "", err
 	}
 	return signedToken, nil

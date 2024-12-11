@@ -14,8 +14,8 @@ type Handlers struct {
 }
 
 const (
-	databaseServiceURL  = "http://localhost:5002"
-	textToSQLServiceURL = "http://localhost:5003"
+	databaseServiceURL  = "http://database-service-container:5002"
+	textToSQLServiceURL = "http://text_to_sql_service-container:5003"
 )
 
 func (h *Handlers) ConvertToSQLHandler(c *gin.Context) {
@@ -154,6 +154,7 @@ func (h *Handlers) GetUsersHandler(c *gin.Context) {
 func (h *Handlers) CreateUserHandler(c *gin.Context) {
 	var request map[string]interface{}
 	if err := c.ShouldBindJSON(&request); err != nil {
+		fmt.Println(err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
 		return
 	}

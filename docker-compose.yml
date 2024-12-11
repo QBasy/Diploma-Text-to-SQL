@@ -17,6 +17,7 @@ services:
       - db
 
   database_service:
+    container_name: database-service-container
     build:
       context: ./database-service
       dockerfile: Dockerfile
@@ -26,12 +27,14 @@ services:
       - DB_USERNAME=postgres
       - DB_PASSWORD=japierdole
       - DB_NAME=mvpdiploma
+      - SECRET_KEY=YAKNOW
     depends_on:
       - db
     ports:
       - "5002:5002"
 
   text_to_sql_service:
+    container_name: text_to_sql_service-container
     build:
       context: ./text-to-sql-service
       dockerfile: Dockerfile

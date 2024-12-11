@@ -1,7 +1,0 @@
-2024-11-09 17:37:09,613 - main - INFO - Received query: Find all users who own items of type electronics
-2024-11-09 17:37:50,989 - main - INFO - Received query: Find all users who own items of type electronics
-2024-11-09 17:38:24,256 - main - INFO - Generated SQL: Schema: Table users with columns: id (uint PRIMARY KEY), password (string) | SELECT distinct user_id FROM Table items WHERE type = "electronics"
-2024-11-09 17:39:00,113 - main - INFO - Received query: Find all users who own items of type electronics
-2024-11-09 17:39:29,594 - main - INFO - Generated SQL: Schema: Table users with columns: id (uint PRIMARY KEY), password (string) | SELECT distinct user_id FROM Table items WHERE type = "electronics"
-2024-11-09 17:39:47,231 - main - INFO - Received query: Find all users
-2024-11-09 17:40:10,120 - main - INFO - Generated SQL: Schema: Table users with columns: id (uint PRIMARY KEY), username (string), password (string)

@@ -10,22 +10,20 @@ func routes() *gin.Engine {
 	router := gin.Default()
 
 	router.Use(cors.New(cors.Config{
-		AllowOriginFunc: func(origin string) bool {
-			allowedOrigins := []string{"*"}
-			for _, allowedOrigin := range allowedOrigins {
-				if origin == allowedOrigin {
-					return true
-				}
-			}
-			return false
-		},
-		AllowMethods:     []string{"GET", "POST"},
+		AllowOrigins:     []string{"*"},
+		AllowMethods:     []string{"GET", "POST", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
 	}))
 
 	handler := handlers.Handlers{}
+
+	auth := router.Group("/auth")
+	{
+		auth.POST("/login", handler.Login)
+		auth.POST("/register", handler.Register)
+	}
 
 	textToSQLApi := router.Group("/text-to-sql")
 	{

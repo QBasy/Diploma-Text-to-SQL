@@ -1,4 +1,5 @@
 import axios from 'axios';
+import {isAuthenticated} from "./stores/authStore";
 
 const API_BASE_URL = 'http://localhost:5001';
 
@@ -57,13 +58,18 @@ export const authorization = {
 
     register: async (name: string, email: string, password: string) => {
         try {
-            const response = await apiClient.post('/auth/register', { name, email, password });
+            const response = await apiClient.post('/auth/register', { username: name, email, password });
             return response.data;
         } catch (error: any) {
             console.error('Registration error:', error);
             alert('Registration failed: ' + error.message);
             throw error;
         }
+    },
+    logout: () => {
+        document.cookie = 'token=;path=/;max-age=0';
+        isAuthenticated.set(false);
+        alert('You have been logged out.');
     }
 };
 

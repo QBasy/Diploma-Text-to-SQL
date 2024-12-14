@@ -14,8 +14,8 @@ type Handlers struct {
 }
 
 const (
-	databaseServiceURL  = "http://database-service-container:5002"
-	textToSQLServiceURL = "http://text_to_sql_service-container:5003"
+	databaseServiceURL  = "http://localhost:5002"
+	textToSQLServiceURL = "http://localhost:5003"
 )
 
 func (h *Handlers) ConvertToSQLHandler(c *gin.Context) {
@@ -23,12 +23,14 @@ func (h *Handlers) ConvertToSQLHandler(c *gin.Context) {
 		Text string `json:"text"`
 	}
 	if err := c.ShouldBindJSON(&request); err != nil {
+		fmt.Println(err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
 		return
 	}
 
 	resp, err := http.Post(fmt.Sprintf("%s/convert", textToSQLServiceURL), "application/json", bytes.NewBufferString(`{"text":"`+request.Text+`"}`))
 	if err != nil {
+		fmt.Println(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to connect to Text-to-SQL service"})
 		return
 	}

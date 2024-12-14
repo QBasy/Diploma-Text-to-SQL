@@ -1,0 +1,1 @@
+./text-to-SQL-service/.venv/Scripts/python.exe C:/Users/QoidynBasy/Desktop/Diploma-text-to-SQL/text-to-SQL-service/main.py

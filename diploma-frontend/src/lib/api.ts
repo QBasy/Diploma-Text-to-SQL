@@ -12,14 +12,14 @@ export const apiClient = axios.create({
 
 export const textToSqlService = {
     convertQuery: async (naturalLanguageQuery: string) => {
-        const response = await apiClient.post('/text-to-sql', { query: naturalLanguageQuery });
+        const response = await apiClient.post('/text-to-sql/convert', { query: naturalLanguageQuery });
         return response.data;
     }
 };
 
 export const customQueryService = {
     executeQuery: async (sql: string) => {
-        const response = await apiClient.post('/custom-query', { sql });
+        const response = await apiClient.post('/database/execute-custom-query', { sql });
         return response.data;
     }
 };

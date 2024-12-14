@@ -57,8 +57,8 @@ func (ac *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userDatabase := models.Database{
-		UserID:   user.ID,
-		FilePath: databasePath,
+		UserID: user.ID,
+		Path:   databasePath,
 	}
 
 	if err := ac.DB.Create(&userDatabase).Error; err != nil {

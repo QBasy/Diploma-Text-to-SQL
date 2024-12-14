@@ -2,8 +2,10 @@ package main
 
 import (
 	"database-service/models"
+	"database/sql"
 	"fmt"
 	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"log"
@@ -12,6 +14,8 @@ import (
 )
 
 var database *gorm.DB
+
+var rawDatabase *sql.DB
 
 func getEnv(key, fallback string) string {
 	value := os.Getenv(key)
@@ -34,16 +38,28 @@ func initDB() {
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
 		host, user, password, dbname, port)
 
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	gormDB, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		log.Fatalf("failed to connect to database: %v", err)
+		log.Fatalf("failed to connect to database using GORM: %v", err)
 	}
 
-	if err := db.AutoMigrate(&models.User{}, &models.Item{}); err != nil {
+	if err := gormDB.AutoMigrate(&models.User{}, &models.Item{}); err != nil {
 		log.Fatalf("failed to migrate database: %v", err)
 	}
 
-	database = db
+	database = gormDB
+
+	sqlDB, err := sql.Open("postgres", dsn)
+	if err != nil {
+		log.Fatalf("failed to connect to database using sql.DB: %v", err)
+	}
+
+	if err := sqlDB.Ping(); err != nil {
+		log.Fatalf("failed to ping database: %v", err)
+	}
+
+	rawDatabase = sqlDB
+
 	log.Println("Database connection established successfully")
 }
 
@@ -55,7 +71,7 @@ func main() {
 
 	initDB()
 
-	routes(database)
+	routes(database, rawDatabase)
 
 	log.Println("Starting server on :5002")
 	if err := http.ListenAndServe(":5002", nil); err != nil {

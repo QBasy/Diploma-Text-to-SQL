@@ -9,13 +9,15 @@ import (
 )
 
 type CustomController struct {
-	DB *gorm.DB
+	DB          *gorm.DB
+	RawDatabase *sql.DB
 }
 
 func (cc *CustomController) ExecuteSQLCustomQuery(w http.ResponseWriter, r *http.Request) {
 	var request struct {
 		SQL string `json:"sql"`
 	}
+
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&request); err != nil {
 		log.Printf("Error decoding request body: %v", err)
@@ -23,16 +25,9 @@ func (cc *CustomController) ExecuteSQLCustomQuery(w http.ResponseWriter, r *http
 		return
 	}
 
-	db, err := sql.Open("postgres", "user=postgres dbname=test sslmode=disable")
-	if err != nil {
-		log.Printf("Error connecting to the database: %v", err)
-		http.Error(w, "Failed to connect to the database", http.StatusInternalServerError)
-		return
-	}
-	defer db.Close()
+	log.Printf("Executing query: %s", request.SQL)
 
-	// Выполнение SQL-запроса
-	rows, err := db.Query(request.SQL)
+	rows, err := cc.RawDatabase.Query(request.SQL)
 	if err != nil {
 		log.Printf("Error executing query: %v", err)
 		http.Error(w, "Failed to execute SQL query", http.StatusInternalServerError)

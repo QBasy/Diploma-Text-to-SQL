@@ -56,19 +56,24 @@ def convert_to_sql(text: str) -> Dict:
         logger.info(f"Processing input: {input_text}")
 
         inputs = tokenizer(input_text, return_tensors="pt", max_length=512, truncation=True)
+
         outputs = model.generate(
             inputs.input_ids,
             max_length=128,
             num_beams=4,
-            early_stopping=True
+            early_stopping=True,
+            output_scores=True,
+            return_dict_in_generate=True
         )
 
-        sql_query = tokenizer.decode(outputs[0], skip_special_tokens=True)
+        sql_query = tokenizer.decode(outputs.sequences[0], skip_special_tokens=True)
 
-        confidence = outputs.sequences_scores[0].item() if outputs.sequences_scores else None
+        scores = outputs.sequences_scores
+        confidence = scores[0].item() if scores is not None else None
+
         execution_time = (datetime.now() - start_time).total_seconds()
-        logger.info(f"Generated SQL query: {sql_query}")
 
+        logger.info(f"Generated SQL query: {sql_query}")
         return {
             "sql_query": sql_query,
             "confidence": confidence,
@@ -77,6 +82,7 @@ def convert_to_sql(text: str) -> Dict:
     except Exception as e:
         logger.error(f"Error converting text to SQL: {str(e)}")
         raise HTTPException(status_code=500, detail="Error converting text to SQL.")
+
 
 @app.post("/convert", response_model=QueryOutput)
 async def convert_endpoint(query_input: QueryInput):

@@ -1,23 +1,24 @@
-<script>
-    import { isAuthenticated } from '$lib/stores/authStore';
+<script lang="ts">
+    // @ts-ignore
+    import { isAuthenticated, checkAuthStatus } from '$lib/stores/authStore';
     import { page } from '$app/stores';
     import { derived } from 'svelte/store';
-    import { onMount } from "svelte";
-    import { authorization } from "./api.ts";
-    import { goto } from "$app/navigation";
+    // @ts-ignore
+    import { authorization } from '$lib/api';
+    import { goto } from '$app/navigation';
+    import { onMount } from 'svelte';
 
     const currentRoute = derived(page, ($page) => $page.url.pathname);
 
+    onMount(() => {
+        checkAuthStatus();
+    });
+
     async function logout() {
         await authorization.logout();
-        await goto('/');
+        checkAuthStatus();
+        goto('/');
     }
-
-    onMount(() => {
-        import('$lib/stores/authStore').then((module) => {
-            module.checkAuthStatus();
-        });
-    })
 </script>
 
 <header class="bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-md">
@@ -29,29 +30,28 @@
                 <a
                         href="/query"
                         class="hover:text-purple-200 font-medium text-lg transition-colors"
-                        class:selected={$currentRoute === '/query' && 'underline font-bold'}
+                        class:selected={$currentRoute === '/query'}
                 >
                     Query
                 </a>
                 <a
-                        href="/items"
+                        href="/database"
                         class="hover:text-purple-200 font-medium text-lg transition-colors"
-                        class:selected={$currentRoute === '/items' && 'underline font-bold'}
+                        class:selected={$currentRoute === '/database'}
                 >
-                    Items
+                    Database
                 </a>
                 <a
                         on:click={logout}
-                        class="hover:text-purple-200 font-medium text-lg transition-colors"
-                        class:selected={$currentRoute === '/auth' && 'underline font-bold'}
+                        class="cursor-pointer hover:text-purple-200 font-medium text-lg transition-colors"
                 >
                     Logout
                 </a>
-            {:else }
+            {:else}
                 <a
                         href="/auth"
                         class="hover:text-purple-200 font-medium text-lg transition-colors"
-                        class:selected={$currentRoute === '/auth' && 'underline font-bold'}
+                        class:selected={$currentRoute === '/auth'}
                 >
                     Auth
                 </a>

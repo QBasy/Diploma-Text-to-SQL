@@ -1,13 +1,16 @@
 <script lang="ts">
-    import { slide } from "svelte/transition";
-    import { authorization } from "../../lib/api.js";
-    import {goto} from "$app/navigation";
+    import { isAuthenticated, loginSuccess } from '$lib/stores/authStore';
+    import { authorization } from '$lib/api';
+    import { slide } from 'svelte/transition';
+    import {onMount} from "svelte";
+    import {getAuthToken} from "../../lib/api";
+    import {checkAuthStatus} from "../../lib/stores/authStore";
 
-    let messageBox = '';
+    let messageBox: string = '';
     let isRegister: boolean = false;
 
-    let password: string = '';
     let email: string = "";
+    let password: string = '';
     let rememberMe: boolean = false;
 
     let name_register: string = '';
@@ -26,29 +29,36 @@
     async function login() {
         try {
             await authorization.login(email, password, rememberMe);
-            messageBox = "Login..."
-            await goto('/');
+            location.reload()
         } catch (e) {
-            messageBox = "User not Found"
+            messageBox = "User not Found";
         }
     }
 
     async function register() {
         if (password_repeat === password_register) {
             try {
+                console.log(name_register, email_register, password_register)
                 await authorization.register(name_register, email_register, password_register);
-                messageBox = "User have successfully registered, now you can Login"
+                messageBox = "User registered. Please login.";
+                isRegister = false;
             } catch (e) {
                 messageBox = "Error on creating user " + e;
             }
         } else {
-            messageBox = "Passwords are not same";
+            messageBox = "Passwords do not match";
         }
     }
 
     function toggleForm() {
         isRegister = !isRegister;
     }
+
+    onMount(() => {
+        if (checkAuthStatus()) {
+            location.assign("/");
+        }
+    })
 </script>
 
 <div class="relative h-screen flex items-center justify-center overflow-hidden">

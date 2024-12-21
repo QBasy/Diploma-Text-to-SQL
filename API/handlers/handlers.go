@@ -123,24 +123,6 @@ func (h *Handlers) GetItemsHandler(c *gin.Context) {
 	c.Data(resp.StatusCode, "application/json", body)
 }
 
-func (h *Handlers) CreateItemHandler(c *gin.Context) {
-	var request map[string]interface{}
-	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
-		return
-	}
-
-	resp, err := http.Post(fmt.Sprintf("%s/items/create", databaseServiceURL), "application/json", bytes.NewBuffer(toJSON(request)))
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to connect to Database service"})
-		return
-	}
-	defer resp.Body.Close()
-
-	body, _ := io.ReadAll(resp.Body)
-	c.Data(resp.StatusCode, "application/json", body)
-}
-
 func (h *Handlers) GetUsersHandler(c *gin.Context) {
 	resp, err := http.Get(fmt.Sprintf("%s/users", databaseServiceURL))
 	if err != nil {

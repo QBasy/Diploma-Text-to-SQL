@@ -24,17 +24,6 @@ export const customQueryService = {
     }
 };
 
-export const itemService = {
-    getItems: async () => {
-        const response = await apiClient.get('/items');
-        return response.data;
-    },
-    createItem: async (item: any) => {
-        const response = await apiClient.post('/items', item);
-        return response.data;
-    }
-};
-
 export const authorization = {
     login: async (email: string, password: string, rememberMe: boolean) => {
         try {
@@ -61,9 +50,13 @@ export const authorization = {
             const response = await apiClient.post('/auth/register', { username: name, email, password });
             return response.data;
         } catch (error: any) {
+            if (error.status === 409) {
+                alert('User with this email already exists');
+                return;
+            }
             console.error('Registration error:', error);
             alert('Registration failed: ' + error.message);
-            throw error;
+            throw Error('User with this email already exists');
         }
     },
     logout: () => {

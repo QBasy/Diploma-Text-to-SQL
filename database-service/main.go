@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
+	_ "github.com/mattn/go-sqlite3"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"log"
@@ -43,7 +44,7 @@ func initDB() {
 		log.Fatalf("failed to connect to database using GORM: %v", err)
 	}
 
-	if err := gormDB.AutoMigrate(&models.User{}, &models.Item{}); err != nil {
+	if err := gormDB.AutoMigrate(&models.User{}, models.Database{}); err != nil {
 		log.Fatalf("failed to migrate database: %v", err)
 	}
 

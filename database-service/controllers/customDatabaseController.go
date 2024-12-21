@@ -55,27 +55,7 @@ func (ctrl CustomDatabaseController) CreateTable(w http.ResponseWriter, r *http.
 	}
 }
 
-func generateTable(table models.Table) string {
-	if table.Name == "" || len(table.Rows) == 0 {
-		return ""
-	}
-	var sqlBuilder strings.Builder
-	sqlBuilder.WriteString(fmt.Sprintf("CREATE TABLE %s (", table.Name))
-	sqlBuilder.WriteString("\nID INTEGER PRIMARY KEY NOT NULL,)")
-	for i, row := range table.Rows {
-		sqlBuilder.WriteString(fmt.Sprintf("%s %s", row.Name, row.DataType))
-		if !row.Null {
-			sqlBuilder.WriteString(fmt.Sprintf(" NOT NULL"))
-		}
-		if i < len(table.Rows)-1 {
-			sqlBuilder.WriteString(",")
-		}
-	}
-	sqlBuilder.WriteString(");")
-	return sqlBuilder.String()
-}
-
-func (ctrl CustomDatabaseController) GetCustomDatabase(w http.ResponseWriter, r *http.Request) {
+func (ctrl CustomDatabaseController) GetDatabase(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value("user_id").(string)
 
 	if !ok {
@@ -137,7 +117,7 @@ func (ctrl CustomDatabaseController) GetCustomDatabase(w http.ResponseWriter, r 
 	_ = json.NewEncoder(w).Encode(tables)
 }
 
-func (ctrl CustomDatabaseController) ExecuteQuery(w http.ResponseWriter, r *http.Request) {
+func (ctrl CustomDatabaseController) GetTable(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value("user_id").(string)
 	if !ok {
 		http.Error(w, "User is not authorized", http.StatusUnauthorized)
@@ -145,18 +125,16 @@ func (ctrl CustomDatabaseController) ExecuteQuery(w http.ResponseWriter, r *http
 	}
 
 	var request struct {
-		Query        string `json:"query"`
-		DatabasePath string `json:"databasePath"`
+		TableName string `json:"table_name"`
 	}
-
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		http.Error(w, "Invalid request format", http.StatusBadRequest)
 		return
 	}
 
 	var userDatabase models.Database
-	if err := ctrl.DB.Where("user_id = ? AND file_path = ?", userID, request.DatabasePath).First(&userDatabase).Error; err != nil {
-		http.Error(w, "Database not found or not associated with the user", http.StatusForbidden)
+	if err := ctrl.DB.Where(&models.Database{UserID: userID}).First(&userDatabase).Error; err != nil {
+		http.Error(w, "Failed to find user database", http.StatusInternalServerError)
 		return
 	}
 
@@ -167,16 +145,16 @@ func (ctrl CustomDatabaseController) ExecuteQuery(w http.ResponseWriter, r *http
 	}
 	defer sqlDB.Close()
 
-	rows, err := sqlDB.Query(request.Query)
+	rows, err := sqlDB.Query(fmt.Sprintf("SELECT * FROM %s;", request.TableName))
 	if err != nil {
-		http.Error(w, "Failed to execute query", http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("Failed to get data from table %s", request.TableName), http.StatusInternalServerError)
 		return
 	}
 	defer rows.Close()
 
 	columns, err := rows.Columns()
 	if err != nil {
-		http.Error(w, "Failed to fetch columns", http.StatusInternalServerError)
+		http.Error(w, "Failed to fetch column names", http.StatusInternalServerError)
 		return
 	}
 
@@ -184,6 +162,7 @@ func (ctrl CustomDatabaseController) ExecuteQuery(w http.ResponseWriter, r *http
 	for rows.Next() {
 		columnValues := make([]interface{}, len(columns))
 		columnPointers := make([]interface{}, len(columns))
+
 		for i := range columnValues {
 			columnPointers[i] = &columnValues[i]
 		}
@@ -196,11 +175,37 @@ func (ctrl CustomDatabaseController) ExecuteQuery(w http.ResponseWriter, r *http
 		row := make(map[string]interface{})
 		for i, colName := range columns {
 			val := columnValues[i]
-			row[colName] = val
+			if b, ok := val.([]byte); ok {
+				row[colName] = string(b)
+			} else {
+				row[colName] = val
+			}
 		}
 		results = append(results, row)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(results)
+	if err := json.NewEncoder(w).Encode(results); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+	}
+}
+
+func generateTable(table models.Table) string {
+	if table.Name == "" || len(table.Rows) == 0 {
+		return ""
+	}
+	var sqlBuilder strings.Builder
+	sqlBuilder.WriteString(fmt.Sprintf("CREATE TABLE %s (", table.Name))
+	sqlBuilder.WriteString("\nID INTEGER PRIMARY KEY NOT NULL,)")
+	for i, row := range table.Rows {
+		sqlBuilder.WriteString(fmt.Sprintf("%s %s", row.Name, row.DataType))
+		if !row.Null {
+			sqlBuilder.WriteString(fmt.Sprintf(" NOT NULL"))
+		}
+		if i < len(table.Rows)-1 {
+			sqlBuilder.WriteString(",")
+		}
+	}
+	sqlBuilder.WriteString(");")
+	return sqlBuilder.String()
 }

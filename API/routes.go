@@ -36,10 +36,19 @@ func routes() *gin.Engine {
 		dbApi.POST("/execute-text-to-sql", handler.ExecuteCustomTextToSQLHandler)
 		dbApi.POST("/execute-custom-query", handler.ExecuteCustomSQLHandler)
 
-		dbApi.GET("/items", handler.GetItemsHandler)
-		dbApi.POST("/items/create", handler.CreateItemHandler)
 		dbApi.GET("/users", handler.GetUsersHandler)
 		dbApi.POST("/users/create", handler.CreateUserHandler)
+
+		dbApi.GET("/get-database", handler.GetUserDatabase)
+		dbApi.POST("/create-table", handler.CreateTable)
+		dbApi.POST("/execute-query", handler.ExecuteDatabaseQuery)
+	}
+
+	customDbApi := router.Group("/db")
+	{
+		customDbApi.GET("/get-database", handler.GetUserDatabase)
+		customDbApi.POST("/create-table", handler.CreateTable)
+		customDbApi.POST("/execute-query", handler.ExecuteDatabaseQuery)
 	}
 	return router
 }

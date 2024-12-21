@@ -57,6 +57,18 @@ services:
     environment:
       - VITE_API_URL=http://diploma-text-to-sql-api-1:5173
 
+  load-balancer:
+    build:
+      context: ReverseProxy
+      dockerfile: Dockerfile
+    ports:
+      - "8810:8810"
+    depends_on:
+      - api
+      - database_service
+      - diploma_frontend
+      - text_to_sql_service
+
   db:
     image: postgres:latest
     environment:

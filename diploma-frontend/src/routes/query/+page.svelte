@@ -1,19 +1,9 @@
 <script lang="ts">
-    import { redirect } from "@sveltejs/kit";
-
-    async function load({ cookies }) {
-        const token = cookies.get('token');
-
-        if (!token) {
-            throw redirect(302, '/auth');
-        }
-
-        return {};
-    }
-
     import { writable } from 'svelte/store';
     import { textToSqlService, customQueryService } from '../../lib/api';
     import {onMount} from "svelte";
+    import {goto} from "$app/navigation";
+    import {checkAuthStatus} from "../../lib/stores/authStore";
 
     interface SQLResult {
         columns: string[];
@@ -40,7 +30,12 @@
     }
 
     onMount(() => {
-        load
+        if (!checkAuthStatus()) {
+            alert(
+                "You must be logged in to access this page. Please log in or register."
+            );
+            goto('/auth');
+        }
     })
 </script>
 

@@ -60,3 +60,48 @@ Diploma-text-to-SQL/
 	// Vite, SvelteKit & TailwindCSS
     diploma-frontend/
 ```
+
+### Client-Side Structure
+
+```
+src/
+├── routes/
+│   ├── +page.svelte
+│   ├── +layout.svelte
+│   ├── auth/
+│   │   ├── +page.svelte
+│   │   ├── +layout.svelte
+│   │   └── +page.server.js
+│   ├── documentation/
+│   │   └── +page.svelte
+│   ├── generate/
+│   │   ├── complex/
+│   │   │   ├── +page.svelte
+│   │   │   └── +page.server.js
+│   │   └── simple/
+│   │       ├── +page.svelte
+│   │       └── +page.server.js
+│   └── profile/
+│       ├── +page.svelte
+│       ├── +page.server.js
+│   	├── database/
+│   	│   ├── +page.svelte
+│   	│   └── +page.server.js
+│   	├── history/
+│   	│   ├── +page.svelte
+│   	│   └── +page.server.js
+│       └── settings/
+│	    ├── +page.svelte
+│           └── +page.server.js
+├── lib/
+│   ├── components/
+│   │   ├── Navbar.svelte
+│   │   ├── Footer.svelte
+│   │   ├── Notification.svelte
+│   │   └── LoadingSpinner.svelte
+│   └── stores/
+│       ├── userStore.js
+│       ├── schemaStore.js
+│       └── historyStore.js
+└── app.html
+```

@@ -1,157 +1,255 @@
-<script lang="ts">
-    import { isAuthenticated, loginSuccess } from '$lib/stores/authStore';
-    import { authorization } from '$lib/api';
-    import { slide } from 'svelte/transition';
-    import {onMount} from "svelte";
-    import {getAuthToken} from "../../lib/api";
-    import {checkAuthStatus} from "../../lib/stores/authStore";
+<script>
+    import { goto } from '$app/navigation';
+    import Notification from '$lib/components/Notification.svelte';
+    import { login, register, forgotPassword } from "$lib/api/index.ts";
+    import {loginUser, registerUser, userStore} from "$lib/stores/index.ts";
+    import {onDestroy, onMount} from "svelte";
 
-    let messageBox: string = '';
-    let isRegister: boolean = false;
+    let activeTab = 'login';
+    let notification = '';
 
-    let email: string = "";
-    let password: string = '';
-    let rememberMe: boolean = false;
+    let loginForm = {
+        email: '',
+        password: ''
+    };
 
-    let name_register: string = '';
-    let email_register: string = '';
-    let password_register: string = '';
-    let password_repeat: string = '';
+    let registerForm = {
+        name: '',
+        email: '',
+        password: '',
+        confirmPassword: ''
+    };
 
-    async function auth() {
-        if (isRegister) {
-            await register();
-        } else {
-            await login();
-        }
+    let forgotPasswordForm = {
+        email: ''
+    };
+
+    let currentBackground = 0;
+    const backgrounds = ['/wallpaper1.jpg', '/wallpaper2.jpg'];
+
+    let interval;
+
+    function startBackgroundChange() {
+        interval = setInterval(() => {
+            currentBackground = (currentBackground + 1) % backgrounds.length;
+        }, 10000);
     }
 
-    async function login() {
+    async function handleLogin() {
+        if (!loginForm.email || !loginForm.password) {
+            notification = 'Please fill in all fields';
+            return;
+        }
+
         try {
-            await authorization.login(email, password, rememberMe);
-            location.reload()
-        } catch (e) {
-            messageBox = "User not Found";
+            await loginUser(loginForm);
+            notification = 'Login successful';
+
+            goto('/');
+        } catch (error) {
+            notification = 'Login failed: ' + (error.message || 'An error occurred');
         }
     }
 
-    async function register() {
-        if (password_repeat === password_register) {
-            try {
-                console.log(name_register, email_register, password_register)
-                await authorization.register(name_register, email_register, password_register);
-                messageBox = "User registered. Please login.";
-                isRegister = false;
-            } catch (e) {
-                messageBox = "Error on creating user " + e;
-            }
-        } else {
-            messageBox = "Passwords do not match";
+    async function handleRegister() {
+        if (!registerForm.name || !registerForm.email || !registerForm.password || !registerForm.confirmPassword) {
+            notification = 'Please fill in all fields';
+            return;
+        }
+
+        if (registerForm.password !== registerForm.confirmPassword) {
+            notification = 'Passwords do not match';
+            return;
+        }
+
+        try {
+            await registerUser(registerForm);
+            notification = 'Registration successful';
+
+            goto('/auth');
+        } catch (error) {
+            notification = 'Registration failed: ' + error.message;
         }
     }
 
-    function toggleForm() {
-        isRegister = !isRegister;
+    async function handleForgotPassword() {
+        if (!forgotPasswordForm.email) {
+            notification = 'Please enter your email';
+            return;
+        }
+
+        try {
+            await forgotPassword(forgotPasswordForm);
+            notification = 'Password reset link sent to your email';
+        } catch (error) {
+            notification = 'Failed to send reset link: ' + error.message;
+        }
     }
 
     onMount(() => {
-        if (checkAuthStatus()) {
-            location.assign("/");
-        }
-    })
+        userStore.subscribe((user) => { if (user) goto('/') });
+        startBackgroundChange();
+    });
+
+    onDestroy(() => {
+        clearInterval(startBackgroundChange);
+    });
 </script>
 
-<div class="relative h-screen flex items-center justify-center overflow-hidden">
-    <!-- Background Image -->
-    <div class="absolute inset-0 bg-cover bg-center transition-all duration-500"
-         style="background-image: url('/background.jpg');"
-         style:transform={isRegister ? 'translateX(50%)' : 'translateX(-50%)'}
-    ></div>
-    <div class="absolute inset-0 bg-cover bg-center transition-all duration-500"
-         style="background-image: url('/background.jpg');"
-         style:transform={isRegister ? 'translateX(-50%)' : 'translateX(50%)'}
-    ></div>
+<div class="min-h-screen flex items-center justify-center relative">
+    {#each backgrounds as bg, index}
+        <div
+                class="absolute inset-0 bg-cover bg-center transition-opacity duration-1000"
+                style="background-image: url({bg}); opacity: {currentBackground === index ? 1 : 0};">
+        </div>
+    {/each}
+    <div class="relative z-10 bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+        <h1 class="text-2xl font-bold mb-6 text-center">
+            {#if activeTab === 'login'}
+                Login
+            {:else if activeTab === 'register'}
+                Register
+            {:else}
+                Forgot Password
+            {/if}
+        </h1>
 
-    <!-- Form Container -->
-    <div class="relative w-full md:w-1/4 bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 transition-transform duration-500 ease-in-out"
-         style:transform={isRegister ? 'translateX(-90%)' : 'translateX(90%)'}>
-
-        <div class="flex justify-between mb-4">
-            <h2 class="text-xl font-bold">
-                {#if isRegister}
-                    Register
-                {:else}
-                    Sign In
-                {/if}
-            </h2>
+        <div class="flex justify-center mb-6">
             <button
-                    on:click={toggleForm}
-                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                {#if isRegister}
-                    Sign In
-                {:else}
-                    Register
-                {/if}
+                    class="px-4 py-2 mr-2 {activeTab === 'login' ? 'bg-blue-500 text-white' : 'bg-gray-200'}"
+                    on:click={() => activeTab = 'login'}
+            >
+                Login
+            </button>
+            <button
+                    class="px-4 py-2 mr-2 {activeTab === 'register' ? 'bg-blue-500 text-white' : 'bg-gray-200'}"
+                    on:click={() => activeTab = 'register'}
+            >
+                Register
+            </button>
+            <button
+                    class="px-4 py-2 {activeTab === 'forgot-password' ? 'bg-blue-500 text-white' : 'bg-gray-200'}"
+                    on:click={() => activeTab = 'forgot-password'}
+            >
+                Forgot Password
+            </button>
+
+            <button
+                    class="px-4 py-2 ml-2 hover:bg-blue-500 hover:text-white bg-gray-200"
+                    on:click={() => goto("/")}
+            >
+                Back
             </button>
         </div>
 
-        <!-- Form with sliding transition -->
-        <form class="transition-transform duration-500 ease-in-out"
-              in:slide={{ x: 200 }} out:slide={{ x: -200 }}>
-            {#if isRegister}
-                <!-- Registration form fields -->
-                <div class="mb-4">
-                    <label class="block text-gray-700 font-bold mb-2" for="name_register">Name</label>
-                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                           id="name_register" type="text" placeholder="Enter your name" bind:value={name_register} required/>
+        {#if activeTab === 'login'}
+            <form on:submit|preventDefault={handleLogin} class="space-y-4">
+                <div>
+                    <label class="block text-gray-700">Email</label>
+                    <input
+                            type="email"
+                            bind:value={loginForm.email}
+                            class="w-full p-2 border rounded-md"
+                            required
+                    />
                 </div>
-                <div class="mb-6">
-                    <label class="block text-gray-700 font-bold mb-2" for="email_register">Email</label>
-                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                           id="email_register" type="email" placeholder="Enter your Email" bind:value={email_register} required/>
+                <div>
+                    <label class="block text-gray-700">Password</label>
+                    <input
+                            type="password"
+                            bind:value={loginForm.password}
+                            class="w-full p-2 border rounded-md"
+                            required
+                    />
                 </div>
-                <div class="mb-6">
-                    <label class="block text-gray-700 font-bold mb-2" for="password_register">Password</label>
-                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                           id="password_register" type="password" placeholder="Enter your password" bind:value={password_register} required/>
-                </div>
-                <div class="mb-6">
-                    <label class="block text-gray-700 font-bold mb-2" for="password_repeat">Repeat Password</label>
-                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                           id="password_repeat" type="password" placeholder="Repeat your password" bind:value={password_repeat} required/>
-                </div>
-            {:else}
-                <!-- Sign-in form fields -->
-                <div class="mb-4">
-                    <label class="block text-gray-700 font-bold mb-2" for="email">Email</label>
-                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                           id="email" type="email" placeholder="Enter your email" bind:value={email}/>
-                </div>
-                <div class="mb-6">
-                    <label class="block text-gray-700 font-bold mb-2" for="password">Password</label>
-                    <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                           id="password" type="password" placeholder="Enter your password" bind:value={password}/>
-                </div>
-                <div class="mb-6">
-                    <input id="rememberMe" type="checkbox" bind:checked={rememberMe} />
-                    <label class="text-gray-700 font-bold mb-2" for="rememberMe">Remember Me</label>
-                </div>
-            {/if}
-            <div class="flex items-center justify-between text-red-500">
-                <p>{messageBox}</p>
-            </div>
-
-            <div class="flex items-center justify-between">
-                <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-                        type="button"
-                on:click={auth}>
-                    {#if isRegister}
-                        Register
-                    {:else}
-                        Sign In
-                    {/if}
+                <button
+                        type="submit"
+                        class="w-full bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+                >
+                    Login
                 </button>
-            </div>
-        </form>
+
+            </form>
+        {:else if activeTab === 'register'}
+            <form on:submit|preventDefault={handleRegister} class="space-y-4">
+                <div>
+                    <label class="block text-gray-700">Name</label>
+                    <input
+                            type="text"
+                            bind:value={registerForm.name}
+                            class="w-full p-2 border rounded-md"
+                            required
+                    />
+                </div>
+                <div>
+                    <label class="block text-gray-700">Email</label>
+                    <input
+                            type="email"
+                            bind:value={registerForm.email}
+                            class="w-full p-2 border rounded-md"
+                            required
+                    />
+                </div>
+                <div>
+                    <label class="block text-gray-700">Password</label>
+                    <input
+                            type="password"
+                            bind:value={registerForm.password}
+                            class="w-full p-2 border rounded-md"
+                            required
+                    />
+                </div>
+                <div>
+                    <label class="block text-gray-700">Confirm Password</label>
+                    <input
+                            type="password"
+                            bind:value={registerForm.confirmPassword}
+                            class="w-full p-2 border rounded-md"
+                            required
+                    />
+                </div>
+                <button
+                        type="submit"
+                        class="w-full bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+                >
+                    Register
+                </button>
+            </form>
+        {:else}
+            <form on:submit|preventDefault={handleForgotPassword} class="space-y-4">
+                <div>
+                    <label class="block text-gray-700">Email</label>
+                    <input
+                            type="email"
+                            bind:value={forgotPasswordForm.email}
+                            class="w-full p-2 border rounded-md"
+                            required
+                    />
+                </div>
+                <button
+                        type="submit"
+                        class="w-full bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+                >
+                    Send Reset Link
+                </button>
+            </form>
+        {/if}
+
+        {#if notification}
+            <Notification message={notification} type={notification.includes('success') ? 'success' : 'error'} />
+        {/if}
+
     </div>
+
 </div>
+
+<style>
+    .transition-opacity {
+        transition: opacity 3s ease-in-out;
+    }
+
+    .bg-cover {
+        background-size: cover;
+        background-position: center;
+    }
+</style>

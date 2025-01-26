@@ -93,7 +93,6 @@ func (ac *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(map[string]string{"message": "User registered successfully"})
 }
 
-// Login user
 func (ac *AuthController) Login(w http.ResponseWriter, r *http.Request) {
 	var reqUser models.User
 	var dbUser models.User

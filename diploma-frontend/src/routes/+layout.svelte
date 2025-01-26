@@ -1,22 +1,11 @@
-<script>
+<script lang="ts">
 	import '../app.css';
-    import { getAuthToken } from '$lib/api';
-    import Navbar from "../lib/Navbar.svelte";
-    import Footer from "../lib/Footer.svelte";
+    import {initializeUser} from "$lib/stores";
     import {onMount} from "svelte";
 	let { children } = $props();
-
     onMount(() => {
-        const token = getAuthToken();
-        if (token) {
-            console.log('User is authenticated');
-        } else {
-            console.log('User is not authenticated');
-        }
+        initializeUser();
     });
-
 </script>
 
-<Navbar/>
 {@render children()}
-<Footer/>

@@ -2,6 +2,8 @@ package main
 
 import (
 	"database-service/models"
+	"database-service/routes"
+	"database-service/utils"
 	"database/sql"
 	"fmt"
 	"github.com/joho/godotenv"
@@ -10,7 +12,6 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"log"
-	"net/http"
 	"os"
 )
 
@@ -18,23 +19,12 @@ var database *gorm.DB
 
 var rawDatabase *sql.DB
 
-func getEnv(key, fallback string) string {
-	value := os.Getenv(key)
-	if value == "" {
-		if fallback == "" {
-			log.Fatalf("Environment variable %s is not set", key)
-		}
-		return fallback
-	}
-	return value
-}
-
 func initDB() {
-	host := getEnv("DB_HOST", "")
-	user := getEnv("DB_USERNAME", "")
-	password := getEnv("DB_PASSWORD", "")
-	dbname := getEnv("DB_NAME", "")
-	port := getEnv("DB_PORT", "")
+	host := utils.GetEnv("POSTGRES_HOST", "")
+	user := utils.GetEnv("POSTGRES_USER", "")
+	password := utils.GetEnv("POSTGRES_PASSWORD", "")
+	dbname := utils.GetEnv("POSTGRES_DB", "")
+	port := utils.GetEnv("POSTGRES_PORT", "")
 
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
 		host, user, password, dbname, port)
@@ -44,7 +34,7 @@ func initDB() {
 		log.Fatalf("failed to connect to database using GORM: %v", err)
 	}
 
-	if err := gormDB.AutoMigrate(&models.User{}, models.Database{}); err != nil {
+	if err := gormDB.AutoMigrate(&models.User{}, models.UserDatabase{}); err != nil {
 		log.Fatalf("failed to migrate database: %v", err)
 	}
 
@@ -72,10 +62,11 @@ func main() {
 
 	initDB()
 
-	routes(database, rawDatabase)
+	r := routes.SetupRouter()
 
 	log.Println("Starting server on :5002")
-	if err := http.ListenAndServe(":5002", nil); err != nil {
+	port := os.Getenv("SERVER_PORT")
+	if err := r.Run(":" + port); err != nil {
 		log.Fatal(err)
 	}
 }

@@ -3,17 +3,21 @@
     import Footer from '$lib/components/Footer.svelte';
 </script>
 
+<svelte:head>
+    <title>Text-To-SQL</title>
+</svelte:head>
+
 <div class="min-h-screen flex flex-col">
     <Navbar />
 
     <main class="flex-grow container mx-auto px-4 py-8">
-        <h1 class="text-3xl font-bold mb-4 text-blue-500">SQL Generator</h1>
+        <h1 class="text-3xl font-bold mb-4 text-blue-500 text-center">SQL Generator</h1>
 
-        <p class="mb-6">
+        <p class="mb-6 text-center">
             Transform natural language queries into precise SQL statements with ease.
         </p>
 
-        <div class="grid md:grid-cols-3 gap-4">
+        <div class="grid md:grid-cols-3 gap-4 w-10/12 mx-auto">
             <div class="bg-white p-6 rounded-lg shadow-md">
                 <h2 class="text-xl font-semibold mb-2">Simple Generation</h2>
                 <p>Quick SQL generation for straightforward queries.</p>

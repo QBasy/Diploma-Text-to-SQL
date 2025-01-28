@@ -1,9 +1,22 @@
 package models
 
+import (
+	"gorm.io/gorm"
+	"time"
+)
+
 type User struct {
-	ID        string     `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
-	Username  string     `json:"username"`
-	Email     string     `json:"email"`
-	Password  string     `json:"password"`
-	Databases []Database `gorm:"foreignKey:UserID" json:"databases"`
+	gorm.Model
+	UUID         string `gorm:"unique"`
+	Username     string `gorm:"unique"`
+	Email        string `gorm:"unique"`
+	PasswordHash string
+	Databases    []UserDatabase
+}
+
+type PasswordResetToken struct {
+	gorm.Model
+	UserID uint
+	Token  string `gorm:"unique"`
+	Expiry time.Time
 }

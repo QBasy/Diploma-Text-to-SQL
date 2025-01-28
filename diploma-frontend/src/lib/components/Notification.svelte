@@ -1,6 +1,6 @@
 <script>
     export let message = '';
-    export let type = 'success'; // 'success' or 'error'
+    export let type = 'success';
     export let duration = 3000;
 
     let visible = false;

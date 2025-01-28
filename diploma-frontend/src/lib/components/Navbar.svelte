@@ -58,7 +58,7 @@
                 {/if}
             </div>
         {:else}
-            <a href="/auth">Login</a>
+            <a href="/auth">Login/Register</a>
         {/if}
     </div>
 </nav>

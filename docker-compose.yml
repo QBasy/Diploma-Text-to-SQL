@@ -1,7 +1,7 @@
 services:
   api:
     build:
-      context: ./API
+      context: API-Gateway
       dockerfile: Dockerfile
     environment:
       - DB_HOST=db

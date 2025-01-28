@@ -13,11 +13,11 @@ interface QueryResponse {
     result: any;
 }
 
-export const createTable = async (schema: TableSchema): Promise<void> => {
+export const createTableAPI = async (schema: TableSchema): Promise<void> => {
     return api.post('/database/tables', schema);
 };
 
-export const executeQuery = async (query: string): Promise<QueryResponse> => {
+export const executeQueryAPI = async (query: string): Promise<QueryResponse> => {
     return api.post('/database/query', { query });
 };
 

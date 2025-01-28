@@ -1,8 +1,8 @@
-<script>
+<script lang="ts">
     import { goto } from '$app/navigation';
     import Notification from '$lib/components/Notification.svelte';
-    import { login, register, forgotPassword } from "$lib/api/index.ts";
-    import {loginUser, registerUser, userStore} from "$lib/stores/index.ts";
+    import {forgotPassword} from "$lib/api";
+    import {loginUser, registerUser, userStore} from "$lib/stores";
     import {onDestroy, onMount} from "svelte";
 
     let activeTab = 'login';
@@ -46,7 +46,7 @@
             notification = 'Login successful';
 
             goto('/');
-        } catch (error) {
+        } catch (error: any) {
             notification = 'Login failed: ' + (error.message || 'An error occurred');
         }
     }
@@ -67,7 +67,7 @@
             notification = 'Registration successful';
 
             goto('/auth');
-        } catch (error) {
+        } catch (error: any) {
             notification = 'Registration failed: ' + error.message;
         }
     }
@@ -81,7 +81,7 @@
         try {
             await forgotPassword(forgotPasswordForm);
             notification = 'Password reset link sent to your email';
-        } catch (error) {
+        } catch (error: any) {
             notification = 'Failed to send reset link: ' + error.message;
         }
     }
@@ -135,7 +135,7 @@
             </button>
 
             <button
-                    class="px-4 py-2 ml-2 hover:bg-blue-500 hover:text-white bg-gray-200"
+                    class="px-4 py-2 ml-2 hover:bg-blue-500 hover:text-white bg-gray-200 button-transition"
                     on:click={() => goto("/")}
             >
                 Back
@@ -251,5 +251,9 @@
     .bg-cover {
         background-size: cover;
         background-position: center;
+    }
+
+    .button-transition {
+        transition: background-color 0.3s ease, color 0.3s ease;
     }
 </style>

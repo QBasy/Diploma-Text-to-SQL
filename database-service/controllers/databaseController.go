@@ -19,20 +19,17 @@ func NewDatabaseController(db *gorm.DB) *DatabaseController {
 	return &DatabaseController{db: db}
 }
 
-// Запрос для создания базы данных
 type CreateDatabaseRequest struct {
 	UserUUID string `json:"user_uuid"`
 	Name     string `json:"name"`
 }
 
-// Запрос для выполнения SQL
 type ExecuteSQLRequest struct {
 	UserUUID     string `json:"user_uuid"`
 	DatabaseUUID string `json:"database_uuid"`
 	Query        string `json:"query"`
 }
 
-// Создание новой базы данных для пользователя
 func (dc *DatabaseController) CreateDatabase(c *gin.Context) {
 	var request CreateDatabaseRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
@@ -75,7 +72,6 @@ func (dc *DatabaseController) CreateDatabase(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Database created successfully", "uuid": databaseUUID, "path": dbPath})
 }
 
-// Выполнение SQL-запроса на базе данных пользователя
 func (dc *DatabaseController) ExecuteSQL(c *gin.Context) {
 	var request ExecuteSQLRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
@@ -83,21 +79,18 @@ func (dc *DatabaseController) ExecuteSQL(c *gin.Context) {
 		return
 	}
 
-	// Поиск информации о базе данных в PostgreSQL
 	var userDatabase models.UserDatabase
 	if err := dc.db.Where("uuid = ?", request.DatabaseUUID).First(&userDatabase).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Database not found"})
 		return
 	}
 
-	// Подключение к SQLite базе данных
 	sqliteDB, err := gorm.Open(sqlite.Open(userDatabase.Path), &gorm.Config{})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to connect to SQLite database"})
 		return
 	}
 
-	// Выполнение SQL-запроса
 	var result []map[string]interface{}
 	if err := sqliteDB.Raw(request.Query).Scan(&result).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

@@ -33,13 +33,18 @@ Diploma-text-to-SQL/
 	// A service for direct work with the database
 	// Go & GORM
     database-service/
+	middlewares/
+	    AuthMiddleware.go
         models/
             user.go
-            item.go
+            database.go
         controllers/
-            itemController.go
-            userController.go
-            customController.go
+            databaseController.go
+	utils/
+	    getEnv.go
+	    jwt.go
+	    migration.go
+	/database/user_databases/[user_id].sqlite
         main.go
         routes.go
         go.mod

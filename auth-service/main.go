@@ -2,6 +2,7 @@ package main
 
 import (
 	"auth-service/controllers"
+	"auth-service/middleware"
 	"auth-service/models"
 	"auth-service/utils"
 	"github.com/gin-gonic/gin"
@@ -10,23 +11,23 @@ import (
 	"gorm.io/gorm"
 	"log"
 	"net/http"
-	"os"
 )
 
-var db gorm.DB
+var db *gorm.DB
 
 func init() {
+	var err error
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found, relying on system environment variables")
 	}
-	dsn := "host=" + os.Getenv("POSTGRES_HOST") +
-		" user=" + os.Getenv("POSTGRES_USER") +
-		" password=" + os.Getenv("POSTGRES_PASSWORD") +
-		" dbname=" + os.Getenv("POSTGRES_DB") +
-		" port=" + os.Getenv("POSTGRES_PORT") +
+	dsn := "host=" + utils.GetEnv("DB_HOST", "localhost") +
+		" user=" + utils.GetEnv("DB_USER", "postgres") +
+		" password=" + utils.GetEnv("DB_PASSWORD", "") +
+		" dbname=" + utils.GetEnv("DB_NAME", "mvpdiploma") +
+		" port=" + utils.GetEnv("DB_PORT", "5432") +
 		" sslmode=disable"
 
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("AuthService: Failed to connect Database %v", err)
 	}
@@ -44,6 +45,12 @@ func main() {
 		auth.POST("/login", userController.Login)
 		auth.POST("/reset-password", userController.ResetPassword)
 		auth.POST("/change-password", userController.ChangePassword)
+
+		userRoutes := auth.Group("/")
+		{
+			userRoutes.Use(middleware.AuthMiddleware())
+			userRoutes.GET("/me", userController.GetMe)
+		}
 
 		authGoogle := auth.Group("/google")
 		{

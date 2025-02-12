@@ -3,46 +3,64 @@ package controllers
 import (
 	"auth-service/models"
 	"auth-service/utils"
+	"bytes"
+	"encoding/json"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
+	"log"
 	"net/http"
+	"strings"
 	"time"
 )
 
 type AuthController struct {
-	db gorm.DB
+	db *gorm.DB
 }
 
-func NewAuthController(db gorm.DB) *AuthController {
+func NewAuthController(db *gorm.DB) *AuthController {
 	return &AuthController{db: db}
 }
 
+type CreateDatabaseRequest struct {
+	UserUUID string `json:"user_uuid"`
+	Name     string `json:"name"`
+}
+
 type RegisterRequest struct {
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Username string `json:"name" binding:"required"`
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required"`
 }
 
 type LoginRequest struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required"`
 }
 
 type ResetPasswordRequest struct {
-	Email string `json:"email"`
+	Email string `json:"email" binding:"required,email"`
 }
 
 type ChangePasswordRequest struct {
-	Token    string `json:"token"`
-	Password string `json:"password"`
+	Token    string `json:"token" binding:"required"`
+	Password string `json:"password" binding:"required"`
 }
 
 func (uc *AuthController) Register(c *gin.Context) {
 	var request RegisterRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	log.Printf(request.Password, request.Email, request.Username)
+
+	var existingUser models.User
+	if err := uc.db.Where("username = ? OR email = ?", request.Username, request.Email).First(&existingUser).Error; err == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Username or email already exists"})
 		return
 	}
 
@@ -60,6 +78,39 @@ func (uc *AuthController) Register(c *gin.Context) {
 	}
 	if err := uc.db.Create(&user).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
+		return
+	}
+
+	dbRequest := CreateDatabaseRequest{
+		UserUUID: user.UUID,
+		Name:     "default",
+	}
+
+	apiGatewayURL := utils.GetEnv("API_GATEWAY_URL", "http://localhost:5001")
+
+	jsonBody, err := json.Marshal(dbRequest)
+	if err != nil {
+		log.Printf(err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to prepare database creation request"})
+		uc.db.Delete(&user)
+		return
+	}
+
+	resp, err := http.Post(
+		fmt.Sprintf("%s/database/create-database", apiGatewayURL),
+		"application/json",
+		bytes.NewBuffer(jsonBody),
+	)
+	req, _ := http.NewRequest("POST", fmt.Sprintf("%s/database/create-database", apiGatewayURL), bytes.NewBuffer(jsonBody))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Auth-Service-Secret", utils.GetEnv("SECRET_KEY", ""))
+
+	client := &http.Client{}
+	resp, err = client.Do(req)
+	if err != nil || resp.StatusCode != http.StatusOK {
+		log.Printf("Failed to create database")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user database"})
+		uc.db.Delete(&user)
 		return
 	}
 
@@ -159,4 +210,36 @@ func (uc *AuthController) ChangePassword(c *gin.Context) {
 	uc.db.Delete(&resetToken)
 
 	c.JSON(http.StatusOK, gin.H{"message": "Password updated successfully"})
+}
+
+func (uc *AuthController) GetMe(c *gin.Context) {
+	authHeader := c.GetHeader("Authorization")
+	if authHeader == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header missing"})
+		return
+	}
+
+	tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+	if tokenString == authHeader {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token format"})
+		return
+	}
+
+	userUUID, err := utils.ValidateJWT(tokenString)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+		return
+	}
+
+	var user models.User
+	if err := uc.db.Where("uuid = ?", userUUID).First(&user).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"uuid":  user.UUID,
+		"name":  user.Username,
+		"email": user.Email,
+	})
 }

@@ -3,18 +3,9 @@ package utils
 import (
 	"github.com/golang-jwt/jwt/v5"
 	"os"
-	"time"
 )
 
 var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
-
-func GenerateJWT(userUUID string) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"user_uuid": userUUID,
-		"exp":       time.Now().Add(24 * time.Hour).Unix(),
-	})
-	return token.SignedString(jwtSecret)
-}
 
 func ValidateJWT(tokenString string) (string, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {

@@ -11,3 +11,7 @@ export interface Table {
     columns: Column[];
     primaryKey: string;
 }
+
+export interface Schema {
+    tables: Table[]
+}

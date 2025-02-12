@@ -1,5 +1,5 @@
 {
-	"name": "ttsql-frontend",
+	"name": "diploma-frontend",
 	"private": true,
 	"version": "0.0.1",
 	"type": "module",
@@ -24,12 +24,17 @@
 		"vite": "^6.0.0"
 	},
 	"dependencies": {
+		"@huggingface/inference": "^3.3.0",
 		"@node-rs/argon2": "^2.0.2",
 		"@oslojs/crypto": "^1.0.1",
 		"@oslojs/encoding": "^1.1.0",
 		"axios": "^1.7.9",
+		"body-parser": "^1.20.3",
 		"d3-interpolate": "^3.0.1",
+		"dotenv": "^16.4.7",
 		"drizzle-orm": "^0.38.4",
+		"express": "^4.21.2",
+		"openai": "^4.83.0",
 		"postgres": "^3.4.5"
 	}
 }

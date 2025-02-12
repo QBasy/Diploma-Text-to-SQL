@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"database-service/utils"
+	"auth-service/utils"
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"

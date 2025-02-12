@@ -1,8 +1,9 @@
-<script>
+<script lang="ts">
     import { userStore } from '$lib/stores/userStore';
     import Notification from '$lib/components/Notification.svelte';
+    import type { User } from '$lib/stores/userStore'
 
-    let currentUser;
+    let currentUser: User | null;
     let notification = '';
 
     let passwordForm = {
@@ -12,7 +13,7 @@
     };
 
     userStore.subscribe(value => {
-        currentUser = value.user;
+        currentUser = value;
     });
 
     function updatePassword() {
@@ -21,28 +22,27 @@
             return;
         }
 
-        // TODO: Implement actual password update logic
         notification = 'Password updated successfully';
         passwordForm = { oldPassword: '', newPassword: '', confirmPassword: '' };
     }
 
     function deleteAccount() {
         if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
-            // TODO: Implement account deletion logic
-            notification = 'Account deleted';
+
+            notification = 'Account successfully deleted';
         }
     }
 </script>
 
-<div class="container mx-auto p-6">
+<div class="container mx-auto p-6 w-4/5">
     <h1 class="text-2xl font-bold mb-6">User Profile</h1>
 
-    <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+    <div class="bg-white shadow-md rounded-lg p-6 mb-6 ">
         <h2 class="text-xl font-semibold mb-4">User Information</h2>
 
         <div class="grid md:grid-cols-2 gap-4">
             <div>
-                <label class="block text-gray-700">Name</label>
+                <label for="{currentUser?.name}" class="block text-gray-700">Name</label>
                 <input
                         type="text"
                         value={currentUser?.name || ''}

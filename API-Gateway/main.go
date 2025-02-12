@@ -34,6 +34,8 @@ func main() {
 
 	metadataRoutes(r)
 
+	historyRoutes(r)
+
 	r.GET("/api/health", handleHealthCheck)
 
 	if err := r.Run(utils.GetEnv("PORT", ":5001")); err != nil {

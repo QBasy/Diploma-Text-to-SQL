@@ -64,9 +64,6 @@ func main() {
 
 	r := routes.SetupRouter()
 
-	log.Println("Starting server on :5002")
 	port := os.Getenv("SERVER_PORT")
-	if err := r.Run(":" + port); err != nil {
-		log.Fatal(err)
-	}
+	r.Run(":" + port)
 }

@@ -1,8 +1,7 @@
 import { writable } from 'svelte/store';
 import { login, register, logout, getCurrentUser } from '$lib/api/auth';
-import axios from "axios";
 
-interface User {
+export interface User {
     id: string;
     name: string;
     email: string;
@@ -36,8 +35,8 @@ export const registerUser = async (data: RegisterRequest) => {
     try {
         const response = await register(data);
 
-        userStore.set(response.user); // Сохраняем данные пользователя
-        localStorage.setItem('token', response.token); // Сохраняем токен
+        userStore.set(response.user);
+        localStorage.setItem('token', response.token);
     } catch (error) {
         throw error;
     }
@@ -45,7 +44,6 @@ export const registerUser = async (data: RegisterRequest) => {
 
 export const logoutUser = async () => {
     try {
-        await logout();
         localStorage.removeItem('token');
         userStore.set(null);
     } catch (error) {
@@ -60,6 +58,7 @@ export const initializeUser = async () => {
             const user = await getCurrentUser();
             userStore.set(user);
         } catch (error) {
+            console.log(error)
             localStorage.removeItem('token');
             userStore.set(null);
         }

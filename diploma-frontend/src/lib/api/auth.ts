@@ -24,11 +24,7 @@ interface ForgotPasswordRequest {
 
 interface AuthResponse {
     token: string;
-    user: {
-        id: string;
-        name: string;
-        email: string;
-    };
+    user: User;
 }
 
 export const login = async (data: LoginRequest): Promise<AuthResponse> => {

@@ -8,10 +8,11 @@ from pathlib import Path
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"Using device: {device}")
 
-model_name = "t5-small"
+model_name = "t5-base"
 model = T5ForConditionalGeneration.from_pretrained(model_name)
 tokenizer = T5Tokenizer.from_pretrained(model_name)
 model = model.to(device)
+
 
 def get_schema_text(db_id):
     base_path = Path("spider/database")
@@ -21,13 +22,16 @@ def get_schema_text(db_id):
             tables = json.load(f)
     except FileNotFoundError:
         return ""
+
     schema_texts = []
     for table in tables:
         table_name = table['table_name']
         columns = [col[1] for col in table['column_names']]
         schema_text = f"Table {table_name} has columns {', '.join(columns)}."
         schema_texts.append(schema_text)
+
     return ' '.join(schema_texts)
+
 
 def preprocess_function(examples):
     db_ids = examples["db_id"]
@@ -59,6 +63,7 @@ def preprocess_function(examples):
         model_inputs["labels"] = labels["input_ids"]
 
     return model_inputs
+
 
 dataset = load_dataset("spider")
 

@@ -9,6 +9,7 @@ services:
       - DB_USERNAME=postgres
       - DB_PASSWORD=japierdole
       - DB_NAME=mvpdiploma
+      - SERVER_PORT=5001
     ports:
       - "5001:5001"
     networks:
@@ -28,11 +29,29 @@ services:
       - DB_PASSWORD=japierdole
       - DB_NAME=mvpdiploma
       - SECRET_KEY=YAKNOW
+      - SERVER_PORT=5002
     depends_on:
       - db
     ports:
       - "5002:5002"
 
+  auth_service:
+    container_name: auth_service-container
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=japierdole
+      - DB_NAME=mvpdiploma
+      - SECRET_KEY=YAKNOW
+      - SERVER_PORT=5003
+    depends_on:
+      - db
+    ports:
+      - "5003:5003"
   text_to_sql_service:
     container_name: text_to_sql_service-container
     build:
@@ -42,32 +61,53 @@ services:
       - API_HOST=api
       - API_PORT=5001
     ports:
-      - "5003:5003"
+      - "5004:5004"
     depends_on:
       - api
+
+  history_service:
+    container_name: history_service-container
+    build:
+      context: ./history-service
+      dockerfile: Dockerfile
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=japierdole
+      - DB_NAME=mvpdiploma
+      - SECRET_KEY=YAKNOW
+      - SERVER_PORT=5006
+    ports:
+      - "5006:5006"
+
+  metadata_service:
+    container_name: metadata_service-container
+    build:
+      context: ./metadata-service
+      dockerfile: Dockerfile
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=japierdole
+      - DB_NAME=mvpdiploma
+      - SECRET_KEY=YAKNOW
+      - SERVER_PORT=5005
+    ports:
+      - "5005:5005"
 
   diploma_frontend:
     build:
       context: ./diploma-frontend
       dockerfile: Dockerfile
     ports:
-      - "5005:5173"
+      - "5000:5173"
     depends_on:
       - api
     environment:
       - VITE_API_URL=http://diploma-text-to-sql-api-1:5173
 
-  load-balancer:
-    build:
-      context: ReverseProxy
-      dockerfile: Dockerfile
-    ports:
-      - "8810:8810"
-    depends_on:
-      - api
-      - database_service
-      - diploma_frontend
-      - text_to_sql_service
 
   db:
     image: postgres:latest

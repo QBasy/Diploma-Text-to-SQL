@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { generateComplexSQL } from '$lib/api';
+    import { generateComplexSQL, generateComplexSQLbyGPT} from '$lib/api';
     import type { Table, Column } from '$lib/types/table';
     import Notification from '$lib/components/Notification.svelte';
     import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
@@ -118,6 +118,7 @@
             console.log(schema, query)
             const response = await generateComplexSQL(query, schema);
             sqlResult = response.sql;
+            console.log(sqlResult);
             notificationMessage = 'SQL generated successfully!';
             notificationType = 'success';
         } catch (err: unknown) {

@@ -1,6 +1,7 @@
 <script lang="ts">
     import {onMount} from 'svelte';
     import {getSchema} from "$lib/api";
+    import {goto} from "$app/navigation";
 
     let schema: Record<string, string[]> = {};
     let loading = true;
@@ -13,7 +14,10 @@
                 acc[table.name] = table.columns.map((col) => col.name);
                 return acc;
             }, {} as Record<string, string[]>);
-        } catch (err) {
+        } catch (err: any) {
+            if (err.message === "Unauthorized") {
+                goto('/login');
+            }
             error = err.message;
         } finally {
             loading = false;

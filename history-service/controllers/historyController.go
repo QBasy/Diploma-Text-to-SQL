@@ -2,8 +2,10 @@ package controllers
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"history-service/models"
+	"log"
 	"net/http"
 )
 
@@ -11,7 +13,7 @@ type HistoryController struct {
 	DB *gorm.DB
 }
 
-func NewHistoryController(db *gorm.DB) *HistoryController {
+func New(db *gorm.DB) *HistoryController {
 	return &HistoryController{DB: db}
 }
 
@@ -24,7 +26,7 @@ func (ctrl *HistoryController) AddHistory(c *gin.Context) {
 		return
 	}
 
-	history.UserID = userID
+	history.UserID = parseUUID(userID)
 	if err := ctrl.DB.Create(&history).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save history"})
 		return
@@ -54,4 +56,13 @@ func (ctrl *HistoryController) ClearHistory(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "History cleared successfully"})
+}
+
+func parseUUID(uuidStr string) uuid.UUID {
+	parsedUUID, err := uuid.Parse(uuidStr)
+	if err != nil {
+		log.Printf("Invalid UUID: %s, error: %v", uuidStr, err)
+		return uuid.Nil
+	}
+	return parsedUUID
 }

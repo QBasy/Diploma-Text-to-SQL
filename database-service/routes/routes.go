@@ -17,10 +17,15 @@ func SetupRouter() *gin.Engine {
 
 	databaseController := controllers.NewDatabaseController(db)
 
-	api := r.Group("/api")
+	api := r.Group("/api/database")
 	{
+		service := api.Group("/")
+		{
+			service.Use(middleware.VerifyAuthService())
+			service.POST("/create-database", databaseController.CreateDatabase)
+		}
 		api.Use(middleware.AuthMiddleware())
-		api.POST("/create-database", databaseController.CreateDatabase)
+		api.GET("/schema", databaseController.GetDatabaseSchema)
 		api.POST("/execute-sql", databaseController.ExecuteSQL)
 	}
 

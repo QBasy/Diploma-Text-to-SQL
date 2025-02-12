@@ -7,7 +7,9 @@ import (
 	"gorm.io/gorm"
 	"history-service/controllers"
 	"history-service/models"
+	"history-service/utils"
 	"log"
+	"net/http"
 	"os"
 )
 
@@ -17,14 +19,15 @@ func init() {
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found, relying on system environment variables")
 	}
-	dsn := "host=" + os.Getenv("POSTGRES_HOST") +
-		" user=" + os.Getenv("POSTGRES_USER") +
-		" password=" + os.Getenv("POSTGRES_PASSWORD") +
-		" dbname=" + os.Getenv("POSTGRES_DB") +
-		" port=" + os.Getenv("POSTGRES_PORT") +
+	dsn := "host=" + utils.GetEnv("DB_HOST", "localhost") +
+		" user=" + utils.GetEnv("DB_USER", "postgres") +
+		" password=" + utils.GetEnv("DB_PASSWORD", "") +
+		" dbname=" + utils.GetEnv("DB_NAME", "mvpdiploma") +
+		" port=" + utils.GetEnv("DB_PORT", "5432") +
 		" sslmode=disable"
 
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	var err error
+	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("AuthService: Failed to connect Database %v", err)
 	}
@@ -35,7 +38,7 @@ func init() {
 func main() {
 	r := gin.Default()
 
-	historyController := controllers.NewHistoryController(db)
+	historyController := controllers.New(db)
 
 	history := r.Group("/api/history")
 	{
@@ -43,6 +46,9 @@ func main() {
 		history.POST("", historyController.AddHistory)
 		history.DELETE("", historyController.ClearHistory)
 	}
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "ok"})
+	})
 
 	port := os.Getenv("PORT")
 	if port == "" {

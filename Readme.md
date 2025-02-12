@@ -33,13 +33,18 @@ Diploma-text-to-SQL/
 	// A service for direct work with the database
 	// Go & GORM
     database-service/
+	middlewares/
+	    AuthMiddleware.go
         models/
             user.go
-            item.go
+            database.go
         controllers/
-            itemController.go
-            userController.go
-            customController.go
+            databaseController.go
+	utils/
+	    getEnv.go
+	    jwt.go
+	    migration.go
+	/database/user_databases/[user_id].sqlite
         main.go
         routes.go
         go.mod
@@ -70,38 +75,40 @@ src/
 │   ├── +layout.svelte
 │   ├── auth/
 │   │   ├── +page.svelte
-│   │   ├── +layout.svelte
-│   │   └── +page.server.js
+│   │   └── +layout.svelte
 │   ├── documentation/
 │   │   └── +page.svelte
 │   ├── generate/
 │   │   ├── complex/
-│   │   │   ├── +page.svelte
-│   │   │   └── +page.server.js
+│   │   │   └── +page.svelte
 │   │   └── simple/
-│   │       ├── +page.svelte
-│   │       └── +page.server.js
+│   │       └── +page.svelte
 │   └── profile/
 │       ├── +page.svelte
-│       ├── +page.server.js
 │   	├── database/
-│   	│   ├── +page.svelte
-│   	│   └── +page.server.js
+│   	│   └── +page.svelte
 │   	├── history/
-│   	│   ├── +page.svelte
-│   	│   └── +page.server.js
+│   	│   └── +page.svelte
 │       └── settings/
-│	    ├── +page.svelte
-│           └── +page.server.js
+│	    └── +page.svelte
 ├── lib/
 │   ├── components/
 │   │   ├── Navbar.svelte
 │   │   ├── Footer.svelte
 │   │   ├── Notification.svelte
 │   │   └── LoadingSpinner.svelte
-│   └── stores/
-│       ├── userStore.js
-│       ├── schemaStore.js
-│       └── historyStore.js
+│   ├── stores/
+│   │   ├── userStore.ts
+│   │   ├── schemaStore.ts
+│   │   ├── historyStore.ts
+│   │   └── index.ts
+│   ├── api/
+│   │   ├── auth.ts
+│   │   ├── database.ts
+│   │   ├── history.ts
+│   │   ├── text-to-sql.ts
+│   │   ├── index.ts
+│   └── types/
+│       └── table.ts
 └── app.html
 ```

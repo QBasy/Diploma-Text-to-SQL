@@ -66,7 +66,7 @@
             await registerUser(registerForm);
             notification = 'Registration successful';
 
-            goto('/auth');
+            goto('/');
         } catch (error: any) {
             notification = 'Registration failed: ' + error.message;
         }

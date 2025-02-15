@@ -1,3 +1,4 @@
+<!--/generate/complex-->
 <script lang="ts">
     import { generateComplexSQL, generateComplexSQLbyGPT} from '$lib/api';
     import type { Table, Column } from '$lib/types/table';

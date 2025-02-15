@@ -15,10 +15,11 @@ type Table struct {
 
 type UserDatabase struct {
 	gorm.Model
-	UserID uint   // Внешний ключ для связи с пользователем
-	UUID   string `gorm:"unique"` // UUID базы данных
-	Name   string // Название базы данных
-	Path   string // Путь к SQLite файлу
+	UserUUID string `gorm:"type:uuid;not null"`                  // UUID внешнего ключа
+	User     User   `gorm:"foreignKey:UserUUID;references:UUID"` // Явная связь через UUID
+	UUID     string `gorm:"unique"`
+	Name     string
+	Path     string
 }
 
 type DatabaseRequest struct {

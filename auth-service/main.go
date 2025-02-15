@@ -2,7 +2,6 @@ package main
 
 import (
 	"auth-service/controllers"
-	"auth-service/middleware"
 	"auth-service/models"
 	"auth-service/utils"
 	"github.com/gin-gonic/gin"
@@ -31,7 +30,7 @@ func init() {
 	if err != nil {
 		log.Fatalf("AuthService: Failed to connect Database %v", err)
 	}
-	_ = db.AutoMigrate(&models.User{}, &models.PasswordResetToken{})
+	_ = db.AutoMigrate(&models.User{}, &models.UserDatabase{}, &models.PasswordResetToken{})
 }
 
 func main() {
@@ -45,12 +44,7 @@ func main() {
 		auth.POST("/login", userController.Login)
 		auth.POST("/reset-password", userController.ResetPassword)
 		auth.POST("/change-password", userController.ChangePassword)
-
-		userRoutes := auth.Group("/")
-		{
-			userRoutes.Use(middleware.AuthMiddleware())
-			userRoutes.GET("/me", userController.GetMe)
-		}
+		auth.GET("/me", userController.GetMe)
 
 		authGoogle := auth.Group("/google")
 		{

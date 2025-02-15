@@ -2,21 +2,13 @@ package models
 
 import (
 	"gorm.io/gorm"
-	"time"
 )
 
 type User struct {
 	gorm.Model
-	UUID         string `gorm:"unique"`
+	UUID         string `gorm:"type:uuid;unique;default:uuid_generate_v4()"` // UUID с default значением
 	Username     string `gorm:"unique"`
 	Email        string `gorm:"unique"`
 	PasswordHash string
-	Databases    []UserDatabase
-}
-
-type PasswordResetToken struct {
-	gorm.Model
-	UserID uint
-	Token  string `gorm:"unique"`
-	Expiry time.Time
+	Databases    []UserDatabase `gorm:"foreignKey:UserUUID;references:UUID"` // Связываем через UUID
 }

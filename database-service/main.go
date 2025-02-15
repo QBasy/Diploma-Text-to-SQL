@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database-service/models"
 	"database-service/routes"
 	"database-service/utils"
 	"database/sql"
@@ -34,8 +33,8 @@ func initDB() {
 		log.Fatalf("failed to connect to database using GORM: %v", err)
 	}
 
-	if err := gormDB.AutoMigrate(&models.User{}, models.UserDatabase{}); err != nil {
-		log.Fatalf("failed to migrate database: %v", err)
+	if err := utils.Migrate(gormDB); err != nil {
+		log.Fatal("Migration failed: ", err)
 	}
 
 	database = gormDB

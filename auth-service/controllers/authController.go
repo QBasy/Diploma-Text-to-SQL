@@ -161,9 +161,9 @@ func (uc *AuthController) ResetPassword(c *gin.Context) {
 	expiry := time.Now().Add(1 * time.Hour)
 
 	resetToken := models.PasswordResetToken{
-		UserID: user.ID,
-		Token:  token,
-		Expiry: expiry,
+		UserUUID: user.UUID,
+		Token:    token,
+		Expiry:   expiry,
 	}
 	if err := uc.db.Create(&resetToken).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save reset token"})
@@ -202,7 +202,7 @@ func (uc *AuthController) ChangePassword(c *gin.Context) {
 		return
 	}
 
-	if err := uc.db.Model(&models.User{}).Where("id = ?", resetToken.UserID).Update("password", string(hashedPassword)).Error; err != nil {
+	if err := uc.db.Model(&models.User{}).Where("id = ?", resetToken.UserUUID).Update("password", string(hashedPassword)).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update password"})
 		return
 	}
@@ -233,6 +233,7 @@ func (uc *AuthController) GetMe(c *gin.Context) {
 
 	var user models.User
 	if err := uc.db.Where("uuid = ?", userUUID).First(&user).Error; err != nil {
+		log.Printf(err.Error())
 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	}

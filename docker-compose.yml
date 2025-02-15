@@ -59,7 +59,7 @@ services:
       dockerfile: Dockerfile
     environment:
       - API_HOST=api
-      - API_PORT=5001
+      - API_PORT=5004
     ports:
       - "5004:5004"
     depends_on:

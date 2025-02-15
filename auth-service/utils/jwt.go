@@ -2,6 +2,7 @@ package utils
 
 import (
 	"github.com/golang-jwt/jwt/v5"
+	"log"
 	"os"
 	"time"
 )
@@ -17,12 +18,15 @@ func GenerateJWT(userUUID string) (string, error) {
 }
 
 func ValidateJWT(tokenString string) (string, error) {
+	log.Printf(tokenString)
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		return jwtSecret, nil
 	})
+	log.Printf(token.Raw)
 	if err != nil {
 		return "", err
 	}
+
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		return claims["user_uuid"].(string), nil
 	}

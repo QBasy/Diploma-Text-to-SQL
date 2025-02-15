@@ -7,11 +7,13 @@
     let { children } = $props();
 
     onMount(() => {
-        userStore.subscribe(user => {
-            if (!user) {
+        const unsubscribe = userStore.subscribe(user => {
+            if (!user && !loadingUser) {
                 goto('/auth');
             }
         });
+
+        return () => unsubscribe();
     });
 </script>
 

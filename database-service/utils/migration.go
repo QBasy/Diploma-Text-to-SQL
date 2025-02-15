@@ -2,22 +2,20 @@ package utils
 
 import (
 	"database-service/models"
-	"github.com/go-gormigrate/gormigrate/v2"
 	"gorm.io/gorm"
+	"log"
 )
 
-func RunMigrations(db *gorm.DB) error {
-	m := gormigrate.New(db, gormigrate.DefaultOptions, []*gormigrate.Migration{
-		{
-			ID: "20231001_create_users_table",
-			Migrate: func(tx *gorm.DB) error {
-				return tx.AutoMigrate(&models.User{})
-			},
-			Rollback: func(tx *gorm.DB) error {
-				return tx.Migrator().DropTable("users")
-			},
-		},
-	})
+func Migrate(db *gorm.DB) error {
+	if err := db.AutoMigrate(&models.User{}, &models.UserDatabase{}); err != nil {
+		log.Println("Error during AutoMigrate:", err)
+		return err
+	}
 
-	return m.Migrate()
+	if err := db.Migrator().CreateConstraint(&models.UserDatabase{}, "UserUUID"); err != nil {
+		log.Println("Error adding foreign key:", err)
+		return err
+	}
+
+	return nil
 }

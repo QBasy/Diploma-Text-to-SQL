@@ -18,14 +18,16 @@ interface RegisterRequest {
     password: string;
 }
 
+export const loadingUser = writable(true);
+
 export const userStore = writable<User | null>(null);
 
 
 export const loginUser = async (data: LoginRequest) => {
     try {
         const response = await login(data);
-        userStore.set(response.user); // Сохраняем данные пользователя
-        localStorage.setItem('token', response.token); // Сохраняем токен
+        userStore.set(response.user);
+        localStorage.setItem('token', response.token);
     } catch (error) {
         throw error;
     }
@@ -53,6 +55,7 @@ export const logoutUser = async () => {
 
 export const initializeUser = async () => {
     const token = localStorage.getItem('token');
+
     if (token) {
         try {
             const user = await getCurrentUser();
@@ -62,5 +65,9 @@ export const initializeUser = async () => {
             localStorage.removeItem('token');
             userStore.set(null);
         }
+    } else {
+        userStore.set(null);
     }
+
+    loadingUser.set(false); // Устанавливаем флаг загрузки в false
 };

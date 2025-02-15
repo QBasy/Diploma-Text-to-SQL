@@ -3,8 +3,8 @@ package middleware
 import (
 	"database-service/utils"
 	"github.com/gin-gonic/gin"
-	"log"
 	"net/http"
+	"strings"
 )
 
 func AuthMiddleware() gin.HandlerFunc {
@@ -15,9 +15,9 @@ func AuthMiddleware() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		log.Println("Received Token:", token)
 
-		userUUID, err := utils.ValidateJWT(token)
+		tokenString := strings.TrimPrefix(token, "Bearer ")
+		userUUID, err := utils.ValidateJWT(tokenString)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
 			c.Abort()

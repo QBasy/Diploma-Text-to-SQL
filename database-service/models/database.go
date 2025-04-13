@@ -15,13 +15,9 @@ type Table struct {
 
 type UserDatabase struct {
 	gorm.Model
-	UserUUID string `gorm:"type:uuid;not null"`                  // UUID внешнего ключа
-	User     User   `gorm:"foreignKey:UserUUID;references:UUID"` // Явная связь через UUID
+	UserUUID string `gorm:"type:uuid;not null"`
+	User     User   `gorm:"foreignKey:UserUUID;references:UUID"`
 	UUID     string `gorm:"unique"`
 	Name     string
 	Path     string
-}
-
-type DatabaseRequest struct {
-	SQLQuery string `json:"sql_query"`
 }

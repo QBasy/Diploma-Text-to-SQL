@@ -52,7 +52,7 @@ func main() {
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "5007"
+		port = "5008"
 	}
 
 	if err := r.Run(":" + port); err != nil {

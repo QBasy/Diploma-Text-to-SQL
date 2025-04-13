@@ -81,28 +81,12 @@ services:
     ports:
       - "5006:5006"
 
-  metadata_service:
-    container_name: metadata_service-container
-    build:
-      context: ./metadata-service
-      dockerfile: Dockerfile
-    environment:
-      - DB_HOST=db
-      - DB_PORT=5432
-      - DB_USERNAME=postgres
-      - DB_PASSWORD=japierdole
-      - DB_NAME=mvpdiploma
-      - SECRET_KEY=YAKNOW
-      - SERVER_PORT=5005
-    ports:
-      - "5005:5005"
-
   diploma_frontend:
     build:
       context: ./diploma-frontend
       dockerfile: Dockerfile
     ports:
-      - "5000:5173"
+      - "5173:5173"
     depends_on:
       - api
     environment:

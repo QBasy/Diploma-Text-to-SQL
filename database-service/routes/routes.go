@@ -27,6 +27,10 @@ func SetupRouter() *gin.Engine {
 		api.Use(middleware.AuthMiddleware())
 		api.GET("/schema", databaseController.GetDatabaseSchema)
 		api.POST("/execute-sql", databaseController.ExecuteSQL)
+
+		api.GET("/schema-complex", databaseController.GetFullDatabaseSchema)
+
+		api.POST("/visualise", databaseController.VisualiseQuery)
 	}
 
 	r.GET("/health", controllers.HealthCheck)
@@ -35,11 +39,11 @@ func SetupRouter() *gin.Engine {
 }
 
 func connectToPostgreSQL() *gorm.DB {
-	dsn := "host=" + os.Getenv("POSTGRES_HOST") +
-		" user=" + os.Getenv("POSTGRES_USER") +
-		" password=" + os.Getenv("POSTGRES_PASSWORD") +
-		" dbname=" + os.Getenv("POSTGRES_DB") +
-		" port=" + os.Getenv("POSTGRES_PORT") +
+	dsn := "host=" + os.Getenv("DB_HOST") +
+		" user=" + os.Getenv("DB_USER") +
+		" password=" + os.Getenv("DB_PASSWORD") +
+		" dbname=" + os.Getenv("DB_NAME") +
+		" port=" + os.Getenv("DB_PORT") +
 		" sslmode=disable"
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {

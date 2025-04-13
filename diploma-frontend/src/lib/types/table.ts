@@ -13,5 +13,5 @@ export interface Table {
 }
 
 export interface Schema {
-    tables: Table[]
+    tables: Table[];
 }

@@ -1,26 +1,56 @@
-    import api from './index';
+import api from './index';
 
-    export interface TableSchema {
-        name: string;
-        columns: { name: string; type: string }[];
-    }
+interface QueryRequest {
+    query: string;
+}
 
-    interface QueryRequest {
-        query: string;
-    }
+interface QueryResponse {
+    result: any;
+}
 
-    interface QueryResponse {
-        result: any;
-    }
+export const createTableAPI = async (schema: TableSchema): Promise<void> => {
+    return api.post('/database/tables', schema);
+};
 
-    export const createTableAPI = async (schema: TableSchema): Promise<void> => {
-        return api.post('/database/tables', schema);
-    };
+export const executeQueryAPI = async (query: string): Promise<QueryResponse> => {
+    return api.post('/database/execute-sql', { query });
+};
 
-    export const executeQueryAPI = async (query: string): Promise<QueryResponse> => {
-        return api.post('/database/execute-sql', { query });
-    };
+export const getSchemaVisualisation = async (query: string): Promise<Schema> => {
+    return api.post('/database/visualisation', { query });
+}
 
-    export const getSchema = async (): Promise<TableSchema[]> => {
-        return api.get('/database/schema');
-    };
+export const getSchemaVisualisationSvg = async (query: string): Promise<{ svg: string }> => {
+    const response = await api.post('/database/visualisation', { query });
+    return response.data;
+};
+
+export interface ColumnInfo {
+    name: string;
+    type: string;
+    isForeignKey: boolean;
+    referencedTable?: string;
+    referencedColumn?: string;
+}
+
+export interface TableSchema {
+    columns: ColumnInfo[];
+    primaryKey: string;
+    foreignKeys: { table: string; from: string; to: string }[];
+}
+
+export type Schema = Record<string, TableSchema>;
+
+export interface SchemaResponse {
+    status: "success" | "error";
+    schema?: Record<string, TableSchema>;
+    message?: string;
+}
+
+export const getSchema = async (): Promise<SchemaResponse> => {
+    return await api.get('/database/schema');
+}
+
+export const getComplexSchema = async (): Promise<Schema> => {
+    return api.get('/database/schema-complex').then(res => res.data);
+};

@@ -19,11 +19,11 @@ var database *gorm.DB
 var rawDatabase *sql.DB
 
 func initDB() {
-	host := utils.GetEnv("POSTGRES_HOST", "")
-	user := utils.GetEnv("POSTGRES_USER", "")
-	password := utils.GetEnv("POSTGRES_PASSWORD", "")
-	dbname := utils.GetEnv("POSTGRES_DB", "")
-	port := utils.GetEnv("POSTGRES_PORT", "")
+	host := utils.GetEnv("DB_HOST", "")
+	user := utils.GetEnv("DB_USER", "")
+	password := utils.GetEnv("DB_PASSWORD", "")
+	dbname := utils.GetEnv("DB_NAME", "")
+	port := utils.GetEnv("DB_PORT", "")
 
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
 		host, user, password, dbname, port)

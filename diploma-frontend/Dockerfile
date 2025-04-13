@@ -16,10 +16,8 @@ WORKDIR /app
 
 COPY --from=builder /app /app
 
-RUN npm install
+RUN npm install --production
 
+EXPOSE 5173
 
-
-EXPOSE 3000
-
-CMD ["npm", "run", "dev"]
+CMD ["npm", "run", "preview"]

@@ -11,9 +11,9 @@ import (
 var (
 	authServiceURL      = utils.GetEnv("AUTH_SERVICE_URL", "http://localhost:5003")
 	databaseServiceURL  = utils.GetEnv("DATABASE_SERVICE_URL", "http://localhost:5004/api")
-	textToSQLServiceURL = utils.GetEnv("TEXT_TO_SQL_SERVICE_URL", "http://127.0.0.1:5006/api/text-to-sql")
+	textToSQLServiceURL = utils.GetEnv("TEXT_TO_SQL_SERVICE_URL", "http://127.0.0.1:5006")
 	metadataServiceURL  = utils.GetEnv("METADATA_SERVICE_URL", "http://localhost:5005/api/metadata")
-	historyServiceURL   = utils.GetEnv("HISTORY_SERVICE_URL", "http://localhost:5007/api/history")
+	historyServiceURL   = utils.GetEnv("HISTORY_SERVICE_URL", "http://localhost:5008/api/history")
 )
 
 func proxyHandler(serviceURL string) gin.HandlerFunc {
@@ -100,6 +100,7 @@ func databaseRoutes(r *gin.Engine) {
 		dbGroup.POST("/create-database", proxyHandler(databaseServiceURL))
 		dbGroup.POST("/execute-sql", proxyHandler(databaseServiceURL))
 		dbGroup.GET("/schema", proxyHandler(databaseServiceURL))
+		dbGroup.GET("/schema-complex", proxyHandler(databaseServiceURL))
 		dbGroup.POST("/tables", proxyHandler(databaseServiceURL))
 	}
 }

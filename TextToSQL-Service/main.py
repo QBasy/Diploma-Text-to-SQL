@@ -1,11 +1,22 @@
-import openai
+from openai import AsyncOpenAI
+from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+from typing import Optional
 from transformers import T5ForConditionalGeneration, T5Tokenizer
 import torch
 import logging
 import os
 import time
+
+from huggingface_hub import login
+load_dotenv()
+
+hf_token = os.getenv("HUGGINGFACE_API_KEY")
+if hf_token:
+    login(token=hf_token)
+else:
+    raise ValueError("HUGGINGFACE_API_KEY is not set in environment variables")
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("uvicorn.error")
@@ -19,18 +30,24 @@ model_simple_name = "./text-to-sql-simple"
 model_simple = T5ForConditionalGeneration.from_pretrained(model_simple_name).to(device)
 tokenizer_simple = T5Tokenizer.from_pretrained(model_simple_name)
 
-model_complex_name = "cssupport/t5-small-awesome-text-to-sql"
+"""model_complex_name = "cssupport/t5-small-awesome-text-to-sql"
+model_complex = T5ForConditionalGeneration.from_pretrained(model_complex_name).to(device)
+tokenizer_complex = T5Tokenizer.from_pretrained(model_complex_name)"""
+
+model_complex_name = "./models/codet5-large"
 model_complex = T5ForConditionalGeneration.from_pretrained(model_complex_name).to(device)
 tokenizer_complex = T5Tokenizer.from_pretrained(model_complex_name)
 
-openai.api_key = os.getenv("OPENAI_API_KEY")
+client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 class QueryRequestComplex(BaseModel):
-    schema: dict
+    schema: Optional[dict] = None
     query: str
 
 class QueryRequestSimple(BaseModel):
     query: str
+
+print("started working")
 
 @app.post("/text-to-sql/simple")
 async def text_to_sql_simple(request: QueryRequestSimple):
@@ -56,13 +73,13 @@ async def text_to_sql_simple(request: QueryRequestSimple):
 
 @app.post("/text-to-sql/complex")
 async def text_to_sql_complex(request: QueryRequestComplex):
-    logger.info(f"Received Complex Request: {request.query}")
+    logger.info(f"Received Complex Request: {request.dict()}")
 
     if not request.schema or not request.query:
         raise HTTPException(status_code=400, detail="Schema and query cannot be empty")
 
     schema_text = []
-    for table in request.schema["tables"]:
+    for table in request.schema["schema"]:
         columns = ", ".join([f"{col['name']} {col['type']}" for col in table["columns"]])
         constraints = []
         if "primaryKey" in table:
@@ -77,16 +94,22 @@ async def text_to_sql_complex(request: QueryRequestComplex):
 
     schema_text = " ".join(schema_text)
 
-    input_text = f"""
-    tables:
+    input_text = f"""### Schema:
     {schema_text}
-    query for: {request.query}
-    """
 
+    ### Query:
+    {request.query}
+
+    ### SQL:
+    """
+    logger.info(f"Inputting data{input_text}")
     input_ids = tokenizer_complex(input_text, return_tensors="pt", padding=True, truncation=True).input_ids.to(device)
 
+    input_ids = tokenizer_complex(input_text, return_tensors="pt", padding=True, truncation=True,
+                                  max_length=512).input_ids.to(device)  # Adjust max_length
+
     with torch.no_grad():
-        outputs = model_complex.generate(input_ids, max_length=512)
+        outputs = model_complex.generate(input_ids, max_length=1024)
 
     sql_query = tokenizer_complex.decode(outputs[0], skip_special_tokens=True).replace('"', "'")
 
@@ -99,29 +122,68 @@ async def text_to_sql_gpt(request: QueryRequestComplex):
     logger.info(f"Received GPT Request: {request.query}")
     start_time = time.time()
 
-    if not request.schema or not request.query:
-        raise HTTPException(status_code=400, detail="Schema and query cannot be empty")
+    if not request.query:
+        raise HTTPException(status_code=400, detail="Query cannot be empty")
 
-    schema_text = " ".join([f"Table {table['name']} has columns {', '.join([col['name'] for col in table['columns']])}."
-                            for table in request.schema["tables"]])
-    prompt = f"Schema: {schema_text}. Translate English to SQL: {request.query}"
+    is_simple = request.schema is None or not request.schema
+
+    if is_simple:
+        logger.info("Processing as simple request (no schema provided)")
+        prompt = f"Convert this natural language query to SQL: {request.query}"
+        system_message = "You are a SQL expert. Convert natural language queries to valid SQL statements. Return only the SQL code without any explanation."
+    else:
+        logger.info("Processing as complex request with schema")
+
+        logger.info(f"Schema received: {request.schema}")
+        schema_text = []
+
+        if request.schema and isinstance(request.schema, dict):
+            if "schema" in request.schema:
+                tables = request.schema["schema"]
+            elif "tables" in request.schema:
+                tables = request.schema["tables"]
+            else:
+                tables = []
+                logger.warning("Schema provided but couldn't find 'schema' or 'tables' key")
+
+        for table in tables:
+            col_descriptions = []
+            for col in table.get("columns", []):
+                col_desc = f"{col['name']} ({col.get('type', 'unknown')})"
+                if col.get("isForeignKey"):
+                    col_desc += f" [FK to {col.get('referencedTable')}.{col.get('referencedColumn')}]"
+                col_descriptions.append(col_desc)
+
+            schema_text.append(f"Table {table['name']}: {', '.join(col_descriptions)}")
+
+        schema_description = "\n".join(schema_text)
+
+        prompt = f"""
+        Given the following database schema:
+
+        {schema_description}
+
+        Convert this natural language query to a valid SQL statement:
+        "{request.query}"
+
+        Return only the SQL code without any explanation.
+        """
+        system_message = "You are a SQL expert. Convert natural language queries to valid SQL based on the provided schema."
 
     try:
         openai_start = time.time()
-        logger.info(f"Sending to OpenAI API with prompt: {prompt}")
+        logger.info(f"Sending to OpenAI API with prompt type: {'simple' if is_simple else 'complex'}")
 
-        response = openai.completions.create(
+        response = await client.responses.create(
             model="gpt-3.5-turbo",
-            prompt=prompt,
-            max_tokens=2048,
-            temperature=1,
-            top_p=1,
-            frequency_penalty=0,
-            presence_penalty=0
+            input=[
+                {"role": "system", "content": system_message},
+                {"role": "user", "content": prompt}
+            ],
         )
 
         openai_end = time.time()
-        sql_query = response['choices'][0]['text'].strip()
+        sql_query = response['choices'][0]['message']['content'].strip()
 
         logger.info(f"Generated SQL (GPT-3.5): {sql_query} in {openai_end - openai_start} seconds")
         logger.info(f"Total processing time: {time.time() - start_time} seconds")
@@ -129,7 +191,7 @@ async def text_to_sql_gpt(request: QueryRequestComplex):
 
     except Exception as e:
         logger.error(f"OpenAI Error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to generate SQL using GPT")
+        raise HTTPException(status_code=500, detail=f"Failed to generate SQL using GPT: {str(e)}")
 
 @app.get("/health")
 async def health_check():

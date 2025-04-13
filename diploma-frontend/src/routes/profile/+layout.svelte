@@ -8,7 +8,7 @@
 
     onMount(() => {
         const unsubscribe = userStore.subscribe(user => {
-            if (!user && !loadingUser) {
+            if (!user) {
                 goto('/auth');
             }
         });

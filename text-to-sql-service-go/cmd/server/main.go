@@ -16,6 +16,8 @@ func main() {
 
 	http.HandleFunc("/text-to-sql/gpt", handler.TextToSQLHandler)
 	http.HandleFunc("/text-to-sql/groc", handler.TextToSQLHandlerWithGroc)
+	http.HandleFunc("/text-to-sql/simple", handler.TextToSQLHandlerWithGroc)
+	http.HandleFunc("/text-to-sql/complex", handler.TextToSQLHandlerWithGroc)
 
 	log.Printf("Starting server on port %s...\n", config.TTSQL.PORT)
 	err = http.ListenAndServe(":"+config.TTSQL.PORT, nil)

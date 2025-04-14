@@ -27,15 +27,15 @@ func CreateComplexPrompt(req *model.Request) (string, string) {
 	}
 
 	prompt := fmt.Sprintf(`
-Given the following database schema:
-
-%s
-
-Convert this natural language query to a valid SQL statement:
-"%s"
-
-Return only the SQL code without any explanation.
-`, schemaText, req.Query)
+	Given the following database schema:
+	
+	%s
+	
+	Convert this natural language query to a valid SQL statement:
+	"%s"
+	
+	Return only the SQL code without any explanation.
+	`, schemaText, req.Query)
 
 	systemMessage := "You are a SQL expert. Convert natural language queries to valid SQL based on the provided schema."
 	return prompt, systemMessage

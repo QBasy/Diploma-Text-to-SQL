@@ -94,7 +94,7 @@ func authRoutes(r *gin.Engine) {
 }
 
 func databaseRoutes(r *gin.Engine) {
-	dbGroup := r.Group("/database")
+	dbGroup := r.Group("/api/database")
 	dbGroup.Use(middleware.RateLimiter())
 	{
 		dbGroup.POST("/create-database", proxyHandler(databaseServiceURL))

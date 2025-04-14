@@ -487,4 +487,5 @@
 /TextToSQL-Service/venv/Lib/site-packages/pip/_internal/network/xmlrpc.py
 /second-testing/
 /service-testing/
-/text-to-sql-service-go/config/local.yaml
+local.yaml
+text-to-sql-service-go/config/local.yaml

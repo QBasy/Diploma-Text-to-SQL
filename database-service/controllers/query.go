@@ -1,3 +1,4 @@
+//query.go file with VisualiseQuery and ExecuteSQL functions
 package controllers
 
 import (

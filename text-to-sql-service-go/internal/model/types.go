@@ -23,6 +23,6 @@ type Column struct {
 }
 
 type Response struct {
-	SqlQuery string `json:"sql_query"`
+	SqlQuery string `json:"sql"`
 	Error    string `json:"error,omitempty"`
 }

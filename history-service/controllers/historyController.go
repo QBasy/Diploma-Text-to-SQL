@@ -1,12 +1,15 @@
 package controllers
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 	"history-service/models"
+	"history-service/utils"
 	"log"
 	"net/http"
+	"time"
 )
 
 type HistoryController struct {
@@ -18,16 +21,34 @@ func New(db *gorm.DB) *HistoryController {
 }
 
 func (ctrl *HistoryController) AddHistory(c *gin.Context) {
-	userID := c.GetString("user_id")
-	var history models.QueryHistory
+	userUUID, err := utils.GetUserUUIDFromRequest(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
+	var databaseUUID uuid.UUID
+	row := ctrl.DB.Raw("SELECT uuid FROM user_databases WHERE user_uuid = ? LIMIT 1", userUUID).Row()
+	if err := row.Scan(&databaseUUID); err != nil {
+		log.Printf("Error fetching database UUID for user %s: %v", userUUID, err)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Database not found"})
+		return
+	}
+
+	var history models.QueryHistory
 	if err := c.ShouldBindJSON(&history); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
 		return
 	}
 
-	history.UserID = parseUUID(userID)
+	history.UserID = parseUUID(userUUID)
+	history.DatabaseUUID = databaseUUID
+	if history.Timestamp.IsZero() {
+		history.Timestamp = time.Now()
+	}
+
 	if err := ctrl.DB.Create(&history).Error; err != nil {
+		fmt.Println("DB ERROR:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save history"})
 		return
 	}
@@ -36,10 +57,14 @@ func (ctrl *HistoryController) AddHistory(c *gin.Context) {
 }
 
 func (ctrl *HistoryController) GetHistory(c *gin.Context) {
-	userID := c.GetString("user_id")
+	userUUID, err := utils.GetUserUUIDFromRequest(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
 	var histories []models.QueryHistory
-	if err := ctrl.DB.Where("user_id = ?", userID).Order("timestamp DESC").Find(&histories).Error; err != nil {
+	if err := ctrl.DB.Where("user_id = ?", userUUID).Order("timestamp DESC").Find(&histories).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch history"})
 		return
 	}
@@ -48,9 +73,13 @@ func (ctrl *HistoryController) GetHistory(c *gin.Context) {
 }
 
 func (ctrl *HistoryController) ClearHistory(c *gin.Context) {
-	userID := c.GetString("user_id")
+	userUUID, err := utils.GetUserUUIDFromRequest(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
-	if err := ctrl.DB.Where("user_id = ?", userID).Delete(&models.QueryHistory{}).Error; err != nil {
+	if err := ctrl.DB.Where("user_id = ?", userUUID).Delete(&models.QueryHistory{}).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to clear history"})
 		return
 	}

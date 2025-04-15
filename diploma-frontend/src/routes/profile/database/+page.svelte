@@ -79,7 +79,7 @@
             await createTableAPI(tableForm);
             notification = `Table ${tableForm.name} created successfully`;
             notificationType = 'success';
-            tables = await getComplexSchema().then(schema => schema.tables); // Обновляем таблицы
+            tables = await getComplexSchema().then(schema => schema.tables);
             tableForm = { name: '', columns: [{ name: '', type: 'TEXT', isForeignKey: false, referencedTable: '', referencedColumn: '' }] };
         } catch (error) {
             notification = 'Error creating table';
@@ -90,24 +90,24 @@
     }
 </script>
 
-<div class="container w-4/5 mx-auto p-8 space-y-6">
-    <h1 class="text-3xl font-bold text-gray-800 mb-8">Database Management</h1>
+<div class="container w-full md:w-11/12 lg:w-4/5 mx-auto p-4 space-y-4">
+    <h1 class="text-2xl font-bold text-gray-800 mb-4">Database Management</h1>
 
-    <div class="flex gap-2 mb-8">
+    <div class="flex gap-1 mb-4">
         <button
-                class="px-6 py-3 rounded-lg font-medium transition-colors duration-200 {activeTab === 'query' ? 'bg-blue-600 text-white shadow-lg' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
+                class="px-3 py-2 text-sm rounded-lg font-medium transition-colors duration-200 {activeTab === 'query' ? 'bg-blue-600 text-white shadow' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
                 on:click={() => activeTab = 'query'}
         >
             SQL Query
         </button>
         <button
-                class="px-6 py-3 rounded-lg font-medium transition-colors duration-200 {activeTab === 'natural' ? 'bg-blue-600 text-white shadow-lg' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
+                class="px-3 py-2 text-sm rounded-lg font-medium transition-colors duration-200 {activeTab === 'natural' ? 'bg-blue-600 text-white shadow' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
                 on:click={() => activeTab = 'natural'}
         >
-            Natural Language Query
+            Natural Language
         </button>
         <button
-                class="px-6 py-3 rounded-lg font-medium transition-colors duration-200 {activeTab === 'table' ? 'bg-blue-600 text-white shadow-lg' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
+                class="px-3 py-2 text-sm rounded-lg font-medium transition-colors duration-200 {activeTab === 'table' ? 'bg-blue-600 text-white shadow' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
                 on:click={() => activeTab = 'table'}
         >
             Create Table
@@ -115,58 +115,58 @@
     </div>
 
     {#if loading}
-        <div class="flex justify-center items-center min-h-[200px]">
+        <div class="flex justify-center items-center min-h-[120px]">
             <LoadingSpinner />
         </div>
     {:else}
         {#if activeTab === 'query'}
-            <div class="bg-white shadow-lg rounded-xl p-8 space-y-4">
+            <div class="bg-white shadow rounded-lg p-4 space-y-3">
                 <textarea
                         bind:value={sqlQuery}
-                        class="w-full h-48 p-4 border border-gray-200 rounded-lg font-mono text-sm resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        class="w-full h-32 p-3 border border-gray-200 rounded-lg font-mono text-sm resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         placeholder="Enter your SQL query"
                 ></textarea>
                 <button
                         on:click={executeSQLQuery}
-                        class="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-6 rounded-lg transition-colors duration-200 shadow-md"
+                        class="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 text-sm rounded-lg transition-colors duration-200 shadow"
                 >
                     Execute Query
                 </button>
             </div>
         {:else if activeTab === 'natural'}
-            <div class="bg-white shadow-lg rounded-xl p-8 space-y-4">
+            <div class="bg-white shadow rounded-lg p-4 space-y-3">
                 <textarea
                         bind:value={naturalLanguageQuery}
-                        class="w-full h-48 p-4 border border-gray-200 rounded-lg text-sm resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        class="w-full h-32 p-3 border border-gray-200 rounded-lg text-sm resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         placeholder="Enter your natural language query"
                 ></textarea>
                 <button
                         on:click={executeNaturalQuery}
-                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-colors duration-200 shadow-md"
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 text-sm rounded-lg transition-colors duration-200 shadow"
                 >
                     Generate and Execute
                 </button>
             </div>
         {:else if activeTab === 'table'}
-            <div class="bg-white shadow-lg rounded-xl p-8 space-y-6">
+            <div class="bg-white shadow rounded-lg p-4 space-y-3">
                 <input
                         type="text"
                         bind:value={tableForm.name}
                         placeholder="Table Name"
-                        class="w-full p-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        class="w-full p-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                <div class="space-y-4">
+                <div class="space-y-2 max-h-64 overflow-y-auto">
                     {#each tableForm.columns as column, index}
-                        <div class="flex gap-4 items-center">
+                        <div class="flex gap-2 items-center">
                             <input
                                     type="text"
                                     bind:value={column.name}
                                     placeholder="Column Name"
-                                    class="flex-1 p-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    class="flex-1 p-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             >
                             <select
                                     bind:value={column.type}
-                                    class="p-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                                    class="p-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
                             >
                                 <option value="TEXT">TEXT</option>
                                 <option value="INTEGER">INTEGER</option>
@@ -175,24 +175,24 @@
                             {#if tableForm.columns.length > 1}
                                 <button
                                         on:click={() => removeColumn(index)}
-                                        class="p-4 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors duration-200"
+                                        class="p-2 bg-red-500 hover:bg-red-600 text-white text-sm rounded-lg transition-colors duration-200"
                                 >
-                                    Remove
+                                    ×
                                 </button>
                             {/if}
                         </div>
                     {/each}
                 </div>
-                <div class="flex gap-4">
+                <div class="flex gap-2">
                     <button
                             on:click={addColumn}
-                            class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-colors duration-200 shadow-md"
+                            class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-3 text-sm rounded-lg transition-colors duration-200 shadow"
                     >
                         Add Column
                     </button>
                     <button
                             on:click={createTable}
-                            class="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-6 rounded-lg transition-colors duration-200 shadow-md"
+                            class="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-3 text-sm rounded-lg transition-colors duration-200 shadow"
                     >
                         Create Table
                     </button>
@@ -202,9 +202,9 @@
     {/if}
 
     {#if queryResult}
-        <div class="mt-8 bg-white shadow-lg rounded-xl p-8">
-            <h2 class="text-xl font-semibold text-gray-800 mb-4">Query Result</h2>
-            <pre class="bg-gray-50 p-6 rounded-lg overflow-x-auto font-mono text-sm">{queryResult}</pre>
+        <div class="mt-4 bg-white shadow rounded-lg p-4">
+            <h2 class="text-lg font-semibold text-gray-800 mb-2">Query Result</h2>
+            <pre class="bg-gray-50 p-3 rounded-lg overflow-x-auto text-xs font-mono">{queryResult}</pre>
         </div>
     {/if}
 
@@ -212,11 +212,9 @@
         <Notification message={notification} type={notificationType} />
     {/if}
 
-    <div class="mt-8 bg-white shadow-lg rounded-xl p-8">
-        <Visualise />
-    </div>
-
-    <div class="mt-8 bg-white shadow-lg rounded-xl p-8">
-        <DatabaseGraph />
+    <div class="mt-4 bg-white shadow rounded-lg p-4 overflow-hidden">
+        <div class="h-full w-full overflow-auto">
+            <Visualise />
+        </div>
     </div>
 </div>

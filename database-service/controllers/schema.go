@@ -12,6 +12,7 @@ import (
 
 func (dc *DatabaseController) GetDatabaseSchema(c *gin.Context) {
 	userUUID, err := utils.GetUserUUIDFromRequest(c)
+	log.Println("GetUserUUIDFromRequest:", userUUID)
 	if err != nil {
 		return
 	}

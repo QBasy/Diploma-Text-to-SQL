@@ -1,6 +1,13 @@
 <script lang="ts">
-    import { onMount } from "svelte";
-    import { executeQueryAPI, getSchemaVisualisationSvg } from '$lib/api/database';
+    import type { PageData } from './$types';
+    export let data: PageData;
+
+    const schema = data.schema;
+
+    import Navbar from '$lib/components/Navbar.svelte';
+    import Footer from '$lib/components/Footer.svelte';
+    import { executeQueryVisualisation, getSchemaVisualisationSvg} from '$lib/api/database';
+    import { generateComplexSQLbyGPT } from '$lib/api';
     import {
         ChevronRight,
         Loader,
@@ -12,7 +19,6 @@
     } from 'lucide-svelte';
     import Notification from '$lib/components/Notification.svelte';
 
-    // State variables
     let naturalLanguageQuery: string = "";
     let sqlQuery: string = "";
     let svgContent: string | null = null;
@@ -36,20 +42,9 @@
             isLoading = true;
             errorMessage = null;
 
-            const response = await fetch('/text-to-sql/gpt', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ query: naturalLanguageQuery })
-            });
+            const response = await generateComplexSQLbyGPT(naturalLanguageQuery, schema)
 
-            if (!response.ok) {
-                throw new Error('Failed to convert natural language to SQL');
-            }
-
-            const data = await response.json();
-            sqlQuery = data.query;
+            sqlQuery = response.sql;
             stage = 'sql';
 
             notificationMessage = "Successfully converted to SQL query";
@@ -71,22 +66,16 @@
             isProcessing = true;
             errorMessage = null;
 
-            // Step 2: Execute SQL query
-            const result = await executeQueryAPI(sqlQuery);
-            queryResult = result.result;
+            const result = await executeQueryVisualisation(sqlQuery);
 
-            // Step 3: If it's a SELECT query, get visualization
             if (sqlQuery.trim().toUpperCase().startsWith('SELECT')) {
-                const visualResult = await getSchemaVisualisationSvg(sqlQuery);
-                svgContent = visualResult.svg;
+                svgContent = result.svg;
 
-                // Notification for visualization
                 notificationMessage = "Query executed and visualization generated";
                 notificationType = 'success';
             } else {
                 svgContent = null;
 
-                // Notification for non-SELECT queries
                 notificationMessage = "Query executed successfully";
                 notificationType = 'success';
             }
@@ -97,7 +86,6 @@
             console.error("Error executing SQL or generating visualization:", error);
             errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
 
-            // Show error notification
             notificationMessage = "Failed to execute query";
             notificationType = 'error';
         } finally {
@@ -112,7 +100,6 @@
         sqlQuery = "";
         errorMessage = null;
 
-        // Optional notification for reset
         notificationMessage = "Started a new query";
         notificationType = 'success';
     }
@@ -120,14 +107,17 @@
     function useExample(example: string) {
         naturalLanguageQuery = example;
 
-        // Subtle feedback
         notificationMessage = "Example selected";
         notificationType = 'success';
     }
 </script>
 
-<Notification message={notificationMessage} type={notificationType} />
+<svelte:head>
+    <title>Visualisation of query</title>
+</svelte:head>
 
+<Notification message={notificationMessage} type={notificationType} />
+<Navbar />
 <div class="container mx-auto p-4 max-w-4xl">
     <h1 class="text-3xl font-bold mb-6 text-gray-800">Data Visualization</h1>
 
@@ -344,6 +334,7 @@
     {/if}
 </div>
 
+<Footer />
 <style>
     .svg-container {
         width: 100%;

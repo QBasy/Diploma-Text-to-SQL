@@ -10,10 +10,9 @@ import (
 
 var (
 	authServiceURL      = utils.GetEnv("AUTH_SERVICE_URL", "http://localhost:5003")
-	databaseServiceURL  = utils.GetEnv("DATABASE_SERVICE_URL", "http://localhost:5004/api")
-	textToSQLServiceURL = utils.GetEnv("TEXT_TO_SQL_SERVICE_URL", "http://127.0.0.1:5006")
-	metadataServiceURL  = utils.GetEnv("METADATA_SERVICE_URL", "http://localhost:5005/api/metadata")
-	historyServiceURL   = utils.GetEnv("HISTORY_SERVICE_URL", "http://localhost:5008/api/history")
+	databaseServiceURL  = utils.GetEnv("DATABASE_SERVICE_URL", "http://localhost:5002")
+	textToSQLServiceURL = utils.GetEnv("TEXT_TO_SQL_SERVICE_URL", "http://localhost:5006")
+	historyServiceURL   = utils.GetEnv("HISTORY_SERVICE_URL", "http://localhost:5008/api")
 )
 
 func proxyHandler(serviceURL string) gin.HandlerFunc {
@@ -102,6 +101,7 @@ func databaseRoutes(r *gin.Engine) {
 		dbGroup.GET("/schema", proxyHandler(databaseServiceURL))
 		dbGroup.GET("/schema-complex", proxyHandler(databaseServiceURL))
 		dbGroup.POST("/tables", proxyHandler(databaseServiceURL))
+		dbGroup.POST("/visualise", proxyHandler(databaseServiceURL))
 	}
 }
 
@@ -109,20 +109,10 @@ func textToSQLRoutes(r *gin.Engine) {
 	textToSQLGroup := r.Group("/text-to-sql")
 	textToSQLGroup.Use(middleware.RateLimiter())
 	{
+		textToSQLGroup.POST("/groc", proxyHandler(textToSQLServiceURL))
 		textToSQLGroup.POST("/gpt", proxyHandler(textToSQLServiceURL))
 		textToSQLGroup.POST("/simple", proxyHandler(textToSQLServiceURL))
 		textToSQLGroup.POST("/complex", proxyHandler(textToSQLServiceURL))
-	}
-}
-
-func metadataRoutes(r *gin.Engine) {
-	metadataGroup := r.Group("/metadata")
-	metadataGroup.Use(middleware.RateLimiter())
-	{
-		metadataGroup.GET("/:user_id/:database_uuid", proxyHandler(metadataServiceURL))
-		metadataGroup.POST("/:user_id/:database_uuid", proxyHandler(metadataServiceURL))
-		metadataGroup.PUT("/:user_id/:database_uuid", proxyHandler(metadataServiceURL))
-		metadataGroup.DELETE("/:user_id/:database_uuid", proxyHandler(metadataServiceURL))
 	}
 }
 
@@ -130,7 +120,6 @@ func handleHealthCheck(c *gin.Context) {
 	services := map[string]string{
 		"auth":     authServiceURL + "/health",
 		"database": databaseServiceURL + "/health",
-		"metadata": metadataServiceURL + "/health",
 		"text2sql": textToSQLServiceURL + "/health",
 		"history":  historyServiceURL + "/health",
 	}

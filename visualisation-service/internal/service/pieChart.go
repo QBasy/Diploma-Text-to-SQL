@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	svg "github.com/ajstarks/svgo"
+	"log"
 	"math"
 	"strconv"
 	"time"
@@ -11,6 +12,7 @@ import (
 )
 
 func generatePieChart(data *pb.QueryResult) (*bytes.Buffer, error) {
+	log.Println("Generating PieChart.svg")
 	rows := data.Result[1:]
 
 	width, height := 800, 500

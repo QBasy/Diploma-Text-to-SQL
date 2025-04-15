@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	svg "github.com/ajstarks/svgo"
+	"log"
 	"math"
 	"strconv"
 	"time"
@@ -11,6 +12,7 @@ import (
 )
 
 func generateScatterChart(data *pb.QueryResult) (*bytes.Buffer, error) {
+	log.Println("Generate Scatter Chart")
 	rows := data.Result[1:]
 
 	width, height := 800, 500
@@ -101,8 +103,8 @@ func generateScatterChart(data *pb.QueryResult) (*bytes.Buffer, error) {
 	}
 
 	axisStyle := "stroke:#343a40;stroke-width:2"
-	canvas.Line(margin.left, height-margin.bottom, width-margin.right, height-margin.bottom, axisStyle) // Ось X
-	canvas.Line(margin.left, margin.top, margin.left, height-margin.bottom, axisStyle)                  // Ось Y
+	canvas.Line(margin.left, height-margin.bottom, width-margin.right, height-margin.bottom, axisStyle)
+	canvas.Line(margin.left, margin.top, margin.left, height-margin.bottom, axisStyle)
 
 	pointColor := "#4895ef"
 	for i := range rows {

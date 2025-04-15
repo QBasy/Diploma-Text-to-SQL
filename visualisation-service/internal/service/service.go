@@ -3,6 +3,7 @@ package service
 import (
 	"bytes"
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 	pb "visualisation-service/generated/visualisationpb"
@@ -10,26 +11,33 @@ import (
 
 func GenerateChart(data *pb.QueryResult) (*bytes.Buffer, error) {
 	if len(data.Result) < 2 {
-		return nil, fmt.Errorf("недостаточно данных для построения графика")
+		return nil, fmt.Errorf("not enough data to draw graph")
 	}
 
+	log.Printf("1 1")
 	chartType := determineChartType(data.SqlQuery, data.Result)
-
+	log.Printf("1 2")
 	switch chartType {
 	case ChartTypeBar:
+		log.Printf("error1")
 		return generateBarChart(data)
 	case ChartTypeLine:
+		log.Printf("error2")
 		return generateLineChart(data)
 	case ChartTypePie:
+		log.Printf("error3")
 		return generatePieChart(data)
 	case ChartTypeScatter:
+		log.Printf("error4")
 		return generateScatterChart(data)
 	default:
+		log.Printf("error5")
 		return generateBarChart(data)
 	}
 }
 
 func determineChartType(query string, results []*pb.Row) string {
+	log.Printf("2 1")
 	query = strings.ToLower(query)
 
 	if strings.Contains(query, "count") || strings.Contains(query, "sum") ||
@@ -44,7 +52,7 @@ func determineChartType(query string, results []*pb.Row) string {
 	if strings.Contains(query, "percent") || strings.Contains(query, "ratio") {
 		return ChartTypePie
 	}
-
+	log.Printf("2 2")
 	numericColumns := 0
 	if len(results) > 0 && len(results[0].Values) >= 2 {
 		for i := 0; i < len(results[0].Values); i++ {
@@ -56,7 +64,7 @@ func determineChartType(query string, results []*pb.Row) string {
 			return ChartTypeScatter
 		}
 	}
-
+	log.Printf("2 3")
 	return ChartTypeBar
 }
 

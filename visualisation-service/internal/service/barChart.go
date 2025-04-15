@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	svg "github.com/ajstarks/svgo"
+	"log"
 	"math"
 	"strconv"
 	"time"
@@ -11,6 +12,7 @@ import (
 )
 
 func generateBarChart(data *pb.QueryResult) (*bytes.Buffer, error) {
+	log.Println("Generating Bar Chart")
 	rows := data.Result[1:]
 
 	width, height := 800, 500
@@ -29,16 +31,19 @@ func generateBarChart(data *pb.QueryResult) (*bytes.Buffer, error) {
 	labels := make([]string, len(rows))
 
 	for i, row := range rows {
-		if len(row.Values) < 2 {
+		if len(row.Values) < 3 {
 			continue
 		}
 
-		labels[i] = row.Values[0]
-		v, err := strconv.ParseFloat(row.Values[1], 64)
+		v, err := strconv.ParseFloat(row.Values[0], 64)
 		if err != nil {
-			return nil, fmt.Errorf("ошибка преобразования данных: %v", err)
+			log.Printf("Skipping non-numeric count value: %v", row.Values[0])
+			continue
 		}
 		values[i] = v
+
+		labels[i] = row.Values[1] + " (ID: " + row.Values[2] + ")"
+
 		if v > maxValue {
 			maxValue = v
 		}
@@ -72,12 +77,10 @@ func generateBarChart(data *pb.QueryResult) (*bytes.Buffer, error) {
 		canvas.Text(margin.left-10, y+5, valueLabel, "text-anchor:end;font-size:12px;fill:#6c757d")
 	}
 
-	// Рисуем оси
 	axisStyle := "stroke:#343a40;stroke-width:2"
 	canvas.Line(margin.left, height-margin.bottom, width-margin.right, height-margin.bottom, axisStyle) // Ось X
 	canvas.Line(margin.left, margin.top, margin.left, height-margin.bottom, axisStyle)                  // Ось Y
 
-	// Рисование столбцов
 	for i, v := range values {
 		if i >= len(rows) {
 			continue
@@ -91,11 +94,9 @@ func generateBarChart(data *pb.QueryResult) (*bytes.Buffer, error) {
 
 		canvas.Rect(x, y, barWidth, h, fmt.Sprintf("fill:%s;rx:3;ry:3", color))
 
-		// Значение над столбцом
 		canvas.Text(x+barWidth/2, y-10, formatNumber(v),
 			"text-anchor:middle;font-size:12px;font-weight:bold;fill:#212529")
 
-		// Подпись категории
 		labelStyle := "text-anchor:middle;font-size:12px;fill:#495057"
 		if len(rows) > 10 {
 			labelStyle += ";transform:rotate(-45deg);transform-origin:center"

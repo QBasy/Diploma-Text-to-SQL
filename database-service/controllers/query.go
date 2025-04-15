@@ -19,13 +19,11 @@ func (dc *DatabaseController) VisualiseQuery(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
 		return
 	}
-
 	userUUID, err := utils.GetUserUUIDFromRequest(c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
 	var userDatabase models.UserDatabase
 	if err := dc.db.Where("user_uuid = ?", userUUID).First(&userDatabase).Error; err != nil {
 		log.Printf("Error fetching database for UUID %s: %v", userUUID, err)
@@ -39,9 +37,10 @@ func (dc *DatabaseController) VisualiseQuery(c *gin.Context) {
 		return
 	}
 	defer sqliteDB.Close()
-
+	log.Printf("1 %v", request.Query)
 	rows, err := sqliteDB.Query(request.Query)
 	if err != nil {
+		log.Printf("Error querying database for query: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid SQL query"})
 		return
 	}
@@ -53,6 +52,7 @@ func (dc *DatabaseController) VisualiseQuery(c *gin.Context) {
 		return
 	}
 
+	log.Printf("cols: %v", cols)
 	var queryResult pb.QueryResult
 	queryResult.SqlQuery = request.Query
 
@@ -76,21 +76,27 @@ func (dc *DatabaseController) VisualiseQuery(c *gin.Context) {
 		queryResult.Result = append(queryResult.Result, &rowData)
 	}
 
+	log.Println("1")
 	conn, err := grpc.Dial(utils.GetEnv("VISUALISATION_SERVICE", "localhost:5007"), grpc.WithInsecure())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to connect to visualisation service"})
 		return
 	}
 	defer conn.Close()
-
+	log.Println("2")
 	client := pb.NewVisualisationServiceClient(conn)
 	svgResponse, err := client.GenerateChart(c, &queryResult)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate visualization"})
 		return
 	}
-
-	c.JSON(http.StatusOK, gin.H{"svg": svgResponse.Svg})
+	log.Println("3")
+	c.JSON(http.StatusOK, gin.H{
+		"svg":       svgResponse.Svg,
+		"result":    queryResult.Result,
+		"columns":   cols,
+		"row_count": len(queryResult.Result),
+	})
 }
 
 func (dc *DatabaseController) ExecuteSQL(c *gin.Context) {

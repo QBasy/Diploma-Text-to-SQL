@@ -32,8 +32,6 @@ func main() {
 
 	textToSQLRoutes(r)
 
-	metadataRoutes(r)
-
 	historyRoutes(r)
 
 	r.GET("/api/health", handleHealthCheck)

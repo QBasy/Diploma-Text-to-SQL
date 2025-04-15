@@ -2,7 +2,6 @@ package handler
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	Config "text-to-sql/internal/config"
 	"text-to-sql/internal/model"
@@ -66,7 +65,7 @@ func TextToSQLHandlerWithGroc(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf(sqlQuery)
+	sqlQuery = utils.StripSQLMarkdown(sqlQuery)
 
 	response := model.Response{SqlQuery: sqlQuery}
 	utils.ParseResponse(w, response)

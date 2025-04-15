@@ -18,6 +18,6 @@ export const generateComplexSQL = async (query: string, schema: Schema[]): Promi
     return api.post('/text-to-sql/complex', { query, schema });
 };
 
-export const generateComplexSQLbyGPT = async (query: string, schema: Schema[]): Promise<TextToSQLResponse> => {
-    return api.post('/text-to-sql/gpt', { query, schema });
-}
+export const generateComplexSQLbyGPT = async (query: string, schema: Schema): Promise<TextToSQLResponse> => {
+    return api.post('/text-to-sql/groc', { query, schema });
+};

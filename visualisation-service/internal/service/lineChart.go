@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	svg "github.com/ajstarks/svgo"
+	"log"
 	"math"
 	"strconv"
 	"strings"
@@ -12,6 +13,7 @@ import (
 )
 
 func generateLineChart(data *pb.QueryResult) (*bytes.Buffer, error) {
+	log.Println("Generating LineChart.svg")
 	rows := data.Result[1:]
 
 	width, height := 800, 500

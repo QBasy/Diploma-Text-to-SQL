@@ -14,6 +14,7 @@ type QueryHistory struct {
 	Query        string    `json:"query" gorm:"type:text;not null"`
 	Result       string    `json:"result" gorm:"type:jsonb"`
 	Timestamp    time.Time `json:"timestamp" gorm:"autoCreateTime"`
+	Success      bool      `json:"success" gorm:"not null;default:false"`
 }
 
 func (q *QueryHistory) BeforeCreate(tx *gorm.DB) (err error) {

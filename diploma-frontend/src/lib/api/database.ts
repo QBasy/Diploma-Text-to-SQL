@@ -8,6 +8,13 @@ interface QueryResponse {
     result: any;
 }
 
+interface VisualisationResponse {
+    svg: string,
+    result: any,
+    columns: any,
+    row_count: number
+}
+
 export const createTableAPI = async (schema: TableSchema): Promise<void> => {
     return api.post('/api/database/tables', schema);
 };
@@ -16,12 +23,12 @@ export const executeQueryAPI = async (query: string): Promise<QueryResponse> => 
     return api.post('/api/database/execute-sql', { query });
 };
 
-export const getSchemaVisualisation = async (query: string): Promise<Schema> => {
-    return api.post('/api/database/visualisation', { query });
+export const executeQueryVisualisation = async (query: string): Promise<VisualisationResponse> => {
+    return api.post('/api/database/visualise', { query });
 }
 
 export const getSchemaVisualisationSvg = async (query: string): Promise<{ svg: string }> => {
-    const response = await api.post('/api/database/visualisation', { query });
+    const response = await api.post('/api/database/visualise', { query });
     return response.data;
 };
 

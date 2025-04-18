@@ -32,6 +32,7 @@ services:
       - SERVER_PORT=5002
     depends_on:
       - db
+      - visualisation-service
     ports:
       - "5002:5002"
 
@@ -50,18 +51,16 @@ services:
       - SERVER_PORT=5003
     depends_on:
       - db
+      - database_service
     ports:
       - "5003:5003"
   text_to_sql_service:
     container_name: text_to_sql_service-container
     build:
-      context: ./text-to-sql-service
+      context: ./text-to-sql-service-go
       dockerfile: Dockerfile
-    environment:
-      - API_HOST=api
-      - API_PORT=5004
     ports:
-      - "5004:5004"
+      - "5006:5006"
     depends_on:
       - api
 
@@ -77,9 +76,19 @@ services:
       - DB_PASSWORD=japierdole
       - DB_NAME=mvpdiploma
       - SECRET_KEY=YAKNOW
-      - SERVER_PORT=5006
+      - SERVER_PORT=5008
     ports:
       - "5006:5006"
+
+  visualisation-service:
+    container_name: visualisation_service-container
+    build:
+      context: ./visualisation-service
+      dockerfile: Dockerfile
+    ports:
+      - "5007:5007"
+    volumes:
+      - ./visualisation-service/local.yaml:/app/local.yaml
 
   diploma_frontend:
     build:

@@ -3,6 +3,7 @@
     import Notification from '$lib/components/Notification.svelte';
     import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
     import { CheckCircle, AlertTriangle } from 'lucide-svelte';
+    import Navbar from "$lib/components/Navbar.svelte";
 
     let isLoading = false;
     let notificationMessage = '';
@@ -29,7 +30,7 @@
 <svelte:head>
     <title>Simple SQL Generation</title>
 </svelte:head>
-
+<Navbar />
 <section class="bg-gray-50 min-h-screen py-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-4xl mx-auto">
         <div class="text-center mb-10">

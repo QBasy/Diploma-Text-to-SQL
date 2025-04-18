@@ -1,9 +1,10 @@
 <script>
-
+    import NavbarDocumentation from "$lib/components/NavbarDocumentation.svelte";
 </script>
 
+<NavbarDocumentation />
 <section class="flex-grow container mx-auto px-4 py-16">
-    <h1 class="text-3xl font-bold text-center text-gray-800 mb-12">SQL Query Generation</h1>
+    <h1 class="text-4xl font-bold text-center text-gray-800 mb-12">SQL Query Generation</h1>
 
     <div class="grid md:grid-cols-2 gap-8">
         <div class="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition">

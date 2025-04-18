@@ -18,6 +18,6 @@ COPY --from=builder /app /app
 
 RUN npm install --production
 
-EXPOSE 5173
+EXPOSE 4173
 
 CMD ["npm", "run", "preview"]

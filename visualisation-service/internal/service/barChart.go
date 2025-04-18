@@ -13,7 +13,7 @@ import (
 
 func generateBarChart(data *pb.QueryResult) (*bytes.Buffer, error) {
 	log.Println("Generating Bar Chart")
-	rows := data.Result[1:]
+	rows := data.Result
 
 	width, height := 800, 500
 	margin := struct {
@@ -31,18 +31,19 @@ func generateBarChart(data *pb.QueryResult) (*bytes.Buffer, error) {
 	labels := make([]string, len(rows))
 
 	for i, row := range rows {
-		if len(row.Values) < 3 {
+		if len(row.Values) < 2 {
+			log.Printf("Skipping row due to insufficient values: %v", row.Values)
 			continue
 		}
 
-		v, err := strconv.ParseFloat(row.Values[0], 64)
+		v, err := strconv.ParseFloat(row.Values[1], 64)
 		if err != nil {
-			log.Printf("Skipping non-numeric count value: %v", row.Values[0])
+			log.Printf("Skipping row due to invalid data: %v", row.Values[1])
 			continue
 		}
 		values[i] = v
 
-		labels[i] = row.Values[1] + " (ID: " + row.Values[2] + ")"
+		labels[i] = row.Values[0] + " (ID: " + row.Values[1] + ")"
 
 		if v > maxValue {
 			maxValue = v
@@ -50,6 +51,11 @@ func generateBarChart(data *pb.QueryResult) (*bytes.Buffer, error) {
 		if v < minValue {
 			minValue = v
 		}
+	}
+
+	if maxValue == 0 {
+		log.Println("Error: Maximum value is zero, cannot scale chart.")
+		return nil, fmt.Errorf("maximum value is zero, cannot generate chart")
 	}
 
 	buf := new(bytes.Buffer)
@@ -60,11 +66,6 @@ func generateBarChart(data *pb.QueryResult) (*bytes.Buffer, error) {
 
 	title := extractTitle(data.SqlQuery)
 	canvas.Text(width/2, 30, title, "text-anchor:middle;font-size:18px;font-weight:bold;fill:#212529")
-
-	colors := []string{
-		"#4361ee", "#3a0ca3", "#7209b7", "#f72585", "#4cc9f0",
-		"#4895ef", "#560bad", "#b5179e", "#480ca8", "#3f37c9",
-	}
 
 	gridLineStyle := "stroke:#dee2e6;stroke-width:1;stroke-dasharray:5,5"
 	numGridLines := 5
@@ -78,8 +79,8 @@ func generateBarChart(data *pb.QueryResult) (*bytes.Buffer, error) {
 	}
 
 	axisStyle := "stroke:#343a40;stroke-width:2"
-	canvas.Line(margin.left, height-margin.bottom, width-margin.right, height-margin.bottom, axisStyle) // Ось X
-	canvas.Line(margin.left, margin.top, margin.left, height-margin.bottom, axisStyle)                  // Ось Y
+	canvas.Line(margin.left, height-margin.bottom, width-margin.right, height-margin.bottom, axisStyle) // X axis
+	canvas.Line(margin.left, margin.top, margin.left, height-margin.bottom, axisStyle)                  // Y axis
 
 	for i, v := range values {
 		if i >= len(rows) {
@@ -87,10 +88,10 @@ func generateBarChart(data *pb.QueryResult) (*bytes.Buffer, error) {
 		}
 
 		x := margin.left + i*(chartWidth/len(rows)) + (chartWidth/len(rows)-barWidth)/2
-		h := int((v / maxValue) * float64(chartHeight))
+		h := int((v / maxValue) * float64(chartHeight)) // Bar height calculation
 		y := margin.top + chartHeight - h
 
-		color := colors[i%len(colors)]
+		color := fmt.Sprintf("#%02x%02x%02x", i*10%255, i*20%255, i*30%255)
 
 		canvas.Rect(x, y, barWidth, h, fmt.Sprintf("fill:%s;rx:3;ry:3", color))
 

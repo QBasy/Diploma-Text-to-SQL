@@ -1,10 +1,14 @@
-import type { PageLoad } from './$types';
+import type { PageLoad } from '../../../../.svelte-kit/types/src/routes';
 import { getComplexSchema } from '$lib/api';
 
 export const load: PageLoad = async ({ fetch }) => {
     try {
         const schema = await getComplexSchema();
+        if (!schema) {
+            throw new Error("Empty schema");
+        }
 
+        console.log(schema)
         return {
             schema: schema
         };

@@ -1,8 +1,8 @@
 import api from './index';
 import type {Schema, Table} from "$lib/types/table"
 
-interface TextToSQLRequest {
-    query: string;
+export interface TextToSQLRequest {
+    sql: string;
     schema?: any;
 }
 
@@ -19,5 +19,6 @@ export const generateComplexSQL = async (query: string, schema: Schema[]): Promi
 };
 
 export const generateComplexSQLbyGPT = async (query: string, schema: Schema): Promise<TextToSQLResponse> => {
+    console.log(schema)
     return api.post('/text-to-sql/groc', { query, schema });
 };

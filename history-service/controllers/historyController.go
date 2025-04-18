@@ -8,7 +8,9 @@ import (
 	"history-service/models"
 	"history-service/utils"
 	"log"
+	"math"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -63,13 +65,85 @@ func (ctrl *HistoryController) GetHistory(c *gin.Context) {
 		return
 	}
 
+	// Parsing pagination parameters
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	perPage, _ := strconv.Atoi(c.DefaultQuery("per_page", "10"))
+
+	// Validate pagination params
+	if page < 1 {
+		page = 1
+	}
+	if perPage < 1 || perPage > 50 {
+		perPage = 10
+	}
+
+	databaseUUID := c.Query("database_uuid")
+	queryType := c.Query("query_type")
+	startDate := c.Query("start_date")
+	endDate := c.Query("end_date")
+	searchQuery := c.Query("search")
+
+	sortBy := c.DefaultQuery("sort_by", "timestamp")
+	sortDir := c.DefaultQuery("sort_dir", "DESC")
+
+	validSortFields := map[string]bool{
+		"timestamp":  true,
+		"query_type": true,
+		"success":    true,
+	}
+
+	if !validSortFields[sortBy] {
+		sortBy = "timestamp"
+	}
+
+	if sortDir != "ASC" && sortDir != "DESC" {
+		sortDir = "DESC"
+	}
+
+	query := ctrl.DB.Where("user_id = ?", userUUID)
+
+	if databaseUUID != "" {
+		query = query.Where("database_uuid = ?", databaseUUID)
+	}
+
+	if queryType != "" {
+		query = query.Where("query_type = ?", queryType)
+	}
+
+	if startDate != "" {
+		query = query.Where("timestamp >= ?", startDate)
+	}
+
+	if endDate != "" {
+		query = query.Where("timestamp <= ?", endDate)
+	}
+
+	if searchQuery != "" {
+		query = query.Where("query ILIKE ?", "%"+searchQuery+"%")
+	}
+
+	var total int64
+	if err := query.Model(&models.QueryHistory{}).Count(&total).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to count history items"})
+		return
+	}
+
 	var histories []models.QueryHistory
-	if err := ctrl.DB.Where("user_id = ?", userUUID).Order("timestamp DESC").Find(&histories).Error; err != nil {
+	if err := query.Order(fmt.Sprintf("%s %s", sortBy, sortDir)).
+		Limit(perPage).
+		Offset((page - 1) * perPage).
+		Find(&histories).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch history"})
 		return
 	}
 
-	c.JSON(http.StatusOK, histories)
+	c.JSON(http.StatusOK, gin.H{
+		"data":      histories,
+		"page":      page,
+		"per_page":  perPage,
+		"total":     total,
+		"last_page": int(math.Ceil(float64(total) / float64(perPage))),
+	})
 }
 
 func (ctrl *HistoryController) ClearHistory(c *gin.Context) {

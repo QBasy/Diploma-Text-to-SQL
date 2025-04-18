@@ -16,6 +16,7 @@ func GenerateSQLWithGroc(client *http.Client, prompt, systemMessage string, mode
 			{"role": "user", "content": prompt},
 		},
 	}
+	log.Printf(prompt)
 	body, err := json.Marshal(requestBody)
 	if err != nil {
 		return "", fmt.Errorf("error marshaling request body: %v", err)

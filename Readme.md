@@ -5,7 +5,7 @@
 ### How to run?
 #### You can run the .sh file by using CMD
 ```shell
-"C:\Program Files\Git\bin\bash.exe" $PATHTOPROJECT"/Diploma-text-to-SQL/start.sh
+
 ```
 #### or You can start the ```start.sh``` file by using your interpreter
 

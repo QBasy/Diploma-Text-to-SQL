@@ -10,8 +10,9 @@ type Schema struct {
 }
 
 type Table struct {
-	Name    string   `json:"name"`
-	Columns []Column `json:"columns"`
+	Name       string   `json:"name"`
+	Columns    []Column `json:"columns"`
+	PrimaryKey string   `json:"primaryKey"`
 }
 
 type Column struct {

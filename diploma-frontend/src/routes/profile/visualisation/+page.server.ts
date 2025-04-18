@@ -1,7 +1,7 @@
 import { getComplexSchema } from '$lib/api';
 import { convertSchemaToGptFormat } from '$lib/utils/converter';
 import { generateComplexSQLbyGPT } from '$lib/api';
-import type { Actions } from './$types'
+import type { Actions } from '../../../../.svelte-kit/types/src/routes'
 
 export const actions: Actions = {
     convertQuery: async ({ request }) => {

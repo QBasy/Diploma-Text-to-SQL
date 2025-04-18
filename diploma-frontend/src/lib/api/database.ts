@@ -58,6 +58,10 @@ export const getSchema = async (): Promise<SchemaResponse> => {
     return await api.get('/api/database/schema');
 }
 
-export const getComplexSchema = async (): Promise<Schema> => {
-    return api.get('/api/database/schema-complex').then(res => res.data);
+
+export const getComplexSchema = async (): Promise<Record<string, TableSchema>> => {
+    const res = await api.get('/api/database/schema-complex');
+
+    return res.schema;
 };
+

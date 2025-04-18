@@ -2,6 +2,7 @@ package handler
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	Config "text-to-sql/internal/config"
 	"text-to-sql/internal/model"
@@ -45,8 +46,10 @@ func TextToSQLHandlerWithGroc(w http.ResponseWriter, r *http.Request) {
 	var prompt, systemMessage string
 	if req.Schema == nil || len(req.Schema.Tables) == 0 {
 		prompt, systemMessage = utils.CreatePrompt(req)
+		log.Printf("SIMPLE")
 	} else {
 		prompt, systemMessage = utils.CreateComplexPrompt(req)
+		log.Printf("COMPLEX")
 	}
 
 	chSQL := make(chan string)

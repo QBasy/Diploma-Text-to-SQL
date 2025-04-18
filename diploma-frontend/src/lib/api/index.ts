@@ -23,14 +23,16 @@ api.interceptors.response.use(
     async (response) => {
         const url = response.config.url;
 
-        if (url?.includes('/database') || url?.includes('/text-to-sql')) {
+        if (url?.includes('/database/execute-sql') || url?.includes('/text-to-sql')) {
             try {
                 await createHistoryEntry({
                     endpoint: url,
                     timestamp: new Date().toISOString(),
-                    query: response.config.data,
-                    result: response.data,
-                    success: response.status >= 200 && response.status < 300
+                    query: response.config?.data,
+                    result: response?.data || { message: 'Unknown error' },
+                    success: false
+                }).catch((err) => {
+                    console.error('Ошибка при создании истории (ошибка запроса):', err);
                 });
             } catch (err) {
                 console.error('Ошибка при создании истории:', err);
@@ -39,27 +41,6 @@ api.interceptors.response.use(
 
         return response.data;
     },
-    (error) => {
-        const url = error.config?.url;
-
-        if (url?.includes('/database/execute-sql') || url?.includes('/text-to-sql')) {
-            createHistoryEntry({
-                endpoint: url,
-                timestamp: new Date().toISOString(),
-                query: error.config?.data,
-                result: error.response?.data || { message: 'Unknown error' },
-                success: false
-            }).catch((err) => {
-                console.error('Ошибка при создании истории (ошибка запроса):', err);
-            });
-        }
-
-        if (error.response) {
-            throw new Error(error.response.data.message || 'An error occurred');
-        } else {
-            throw new Error('Network error');
-        }
-    }
 );
 
 

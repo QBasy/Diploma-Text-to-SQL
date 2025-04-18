@@ -1,22 +1,26 @@
 <script lang="ts">
-    import { onMount } from "svelte";
-    import { userStore } from "$lib/stores/";
-    import { goto } from "$app/navigation";
-    import Navbar from "$lib/components/Navbar.svelte";
+    import { onMount } from 'svelte';
+    import { userStore, loadingUser, initializeUser } from '$lib/stores';
+    import { get } from 'svelte/store';
+    import { goto } from '$app/navigation';
 
-    let { children } = $props();
+    onMount(async () => {
+        await initializeUser();
 
-    onMount(() => {
-        const unsubscribe = userStore.subscribe(user => {
-            if (!user) {
-                goto('/auth');
-            }
-        });
-
-        return () => unsubscribe();
+        const user = get(userStore);
+        if (!user) {
+            goto('/auth');
+        }
     });
+    import Navbar from "$lib/components/Navbar.svelte";
 </script>
 
 <Navbar />
 
-{@render children()}
+
+{#if $loadingUser}
+    <p>Loading...</p>
+{:else}
+    <slot />
+{/if}
+

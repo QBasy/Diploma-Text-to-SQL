@@ -1,9 +1,9 @@
-<!--/generate/complex-->
 <script lang="ts">
     import { generateComplexSQL } from '$lib/api';
     import type { Table, Column } from '$lib/types/table';
     import Notification from '$lib/components/Notification.svelte';
     import LoadingSpinner from '$lib/components/LoadingSpinner.svelte';
+    import { PlusCircle, Edit, Trash2 } from 'lucide-svelte'; // Added Lucide icons
 
     let isLoading: boolean = false;
     let notificationMessage: string = '';
@@ -191,9 +191,10 @@
                                         <button
                                                 type="button"
                                                 on:click={() => openPKeyModal(tableIndex)}
-                                                class="w-full mt-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
+                                                class="w-full mt-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 flex items-center justify-between"
                                         >
-                                            + Add Primary Key
+                                            <span class="text-sm">+ Add Primary Key</span>
+                                            <PlusCircle class="h-5 w-5 text-gray-700" />
                                         </button>
                                     {/if}
                                 </div>
@@ -239,15 +240,17 @@
                                                             <button
                                                                     type="button"
                                                                     on:click={() => openFKeyModal(tableIndex, columnIndex)}
-                                                                    class="text-blue-600 hover:text-blue-800 text-sm"
+                                                                    class="text-blue-600 hover:text-blue-800 text-sm flex items-center"
                                                             >
+                                                                <Edit class="h-4 w-4 mr-1" />
                                                                 Edit
                                                             </button>
                                                             <button
                                                                     type="button"
                                                                     on:click={() => removeForeignKey(tableIndex, columnIndex)}
-                                                                    class="text-red-600 hover:text-red-800 text-sm"
+                                                                    class="text-red-600 hover:text-red-800 text-sm flex items-center"
                                                             >
+                                                                <Trash2 class="h-4 w-4 mr-1" />
                                                                 Remove
                                                             </button>
                                                         </div>
@@ -256,9 +259,10 @@
                                                     <button
                                                             type="button"
                                                             on:click={() => openFKeyModal(tableIndex, columnIndex)}
-                                                            class="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 text-sm"
+                                                            class="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 text-sm flex items-center justify-between"
                                                     >
-                                                        + Add Foreign Key
+                                                        <span class="text-sm">+ Add Foreign Key</span>
+                                                        <Edit class="h-5 w-5 text-gray-700" />
                                                     </button>
                                                 {/if}
                                             </div>
@@ -270,9 +274,10 @@
                                 <button
                                         type="button"
                                         on:click={() => addColumn(tableIndex)}
-                                        class="w-full mt-4 px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
+                                        class="w-full mt-4 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 flex items-center justify-between"
                                 >
-                                    + Add Column
+                                    <span class="text-sm">+ Add Column</span>
+                                    <PlusCircle class="h-5 w-5" />
                                 </button>
                             </div>
                         {/each}
@@ -282,9 +287,10 @@
                     <button
                             type="button"
                             on:click={addTable}
-                            class="w-full mt-4 px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
+                            class="w-full mt-8 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 flex items-center justify-between"
                     >
-                        + Add Table
+                        <span class="text-sm">+ Add Table</span>
+                        <PlusCircle class="h-5 w-5" />
                     </button>
                 </div>
 

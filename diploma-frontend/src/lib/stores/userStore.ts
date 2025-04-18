@@ -54,14 +54,20 @@ export const logoutUser = async () => {
 };
 
 export const initializeUser = async () => {
+    if (typeof localStorage === 'undefined') {
+        loadingUser.set(false);
+        return;
+    }
+
     const token = localStorage.getItem('token');
+    loadingUser.set(true);
 
     if (token) {
         try {
             const user = await getCurrentUser();
             userStore.set(user);
         } catch (error) {
-            console.log(error)
+            console.log(error);
             localStorage.removeItem('token');
             userStore.set(null);
         }
@@ -69,5 +75,6 @@ export const initializeUser = async () => {
         userStore.set(null);
     }
 
-    loadingUser.set(false); // Устанавливаем флаг загрузки в false
+    loadingUser.set(false); // Завершаем загрузку
 };
+

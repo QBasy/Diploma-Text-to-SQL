@@ -56,7 +56,7 @@ func (uc *AuthController) Register(c *gin.Context) {
 		return
 	}
 
-	log.Printf(request.Password, request.Email, request.Username)
+	log.Printf("Registering user: %s, %s", request.Username, request.Email)
 
 	var existingUser models.User
 	if err := uc.db.Where("username = ? OR email = ?", request.Username, request.Email).First(&existingUser).Error; err == nil {
@@ -90,27 +90,28 @@ func (uc *AuthController) Register(c *gin.Context) {
 
 	jsonBody, err := json.Marshal(dbRequest)
 	if err != nil {
-		log.Printf(err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to prepare database creation request"})
+		log.Printf("JSON marshal error: %v", err)
 		uc.db.Delete(&user)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to prepare database creation request"})
 		return
 	}
 
-	resp, err := http.Post(
-		fmt.Sprintf("%s/database/create-database", apiGatewayURL),
-		"application/json",
-		bytes.NewBuffer(jsonBody),
-	)
-	req, _ := http.NewRequest("POST", fmt.Sprintf("%s/database/create-database", apiGatewayURL), bytes.NewBuffer(jsonBody))
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/api/database/create-database", apiGatewayURL), bytes.NewBuffer(jsonBody))
+	if err != nil {
+		log.Printf("Request creation error: %v", err)
+		uc.db.Delete(&user)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create request to database service"})
+		return
+	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("X-Auth-Service-Secret", utils.GetEnv("SECRET_KEY", ""))
 
 	client := &http.Client{}
-	resp, err = client.Do(req)
+	resp, err := client.Do(req)
 	if err != nil || resp.StatusCode != http.StatusOK {
-		log.Printf("Failed to create database")
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user database"})
+		log.Printf("Failed to create database: %v | Status: %v", err, resp.StatusCode)
 		uc.db.Delete(&user)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user database"})
 		return
 	}
 

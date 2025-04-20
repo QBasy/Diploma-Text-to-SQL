@@ -14,6 +14,19 @@ interface VisualisationResponse {
     columns: any,
     row_count: number
 }
+export interface ColumnInfo {
+    name: string;
+    type: string;
+    isForeignKey: boolean;
+    referencedTable?: string;
+    referencedColumn?: string;
+}
+
+export interface TableSchema {
+    name: string;
+    columns: ColumnInfo[];
+    primaryKey?: string;
+}
 
 export const createTableAPI = async (schema: TableSchema): Promise<void> => {
     return api.post('/api/database/tables', schema);
@@ -23,12 +36,13 @@ export const executeQueryAPI = async (query: string): Promise<QueryResponse> => 
     return api.post('/api/database/execute-sql', { query });
 };
 
-export const executeQueryVisualisation = async (query: string): Promise<VisualisationResponse> => {
-    return api.post('/api/database/visualise', { query });
+export const executeQueryVisualisation = async (query: string, databaseUUID: string = ""): Promise<VisualisationResponse> => {
+    console.log(databaseUUID)
+    return api.post('/api/database/visualise', { query, databaseUUID });
 }
 
-export const getSchemaVisualisationSvg = async (query: string): Promise<{ svg: string }> => {
-    const response = await api.post('/api/database/visualise', { query });
+export const getSchemaVisualisationSvg = async (query: string, databaseUUID: string = ""): Promise<{ svg: string }> => {
+    const response = await api.post('/api/database/visualise', { query, databaseUUID });
     return response.data;
 };
 

@@ -23,6 +23,13 @@ type User struct {
 	Databases    []UserDatabase `gorm:"foreignKey:UserUUID;references:UUID"`
 }
 
+type EmailVerificationToken struct {
+	gorm.Model
+	UserUUID string `gorm:"type:uuid;uniqueIndex"`
+	Token    string `gorm:"uniqueIndex"`
+	Expiry   time.Time
+}
+
 type PasswordResetToken struct {
 	gorm.Model
 	UserUUID string `gorm:"type:uuid;unique"`

@@ -5,7 +5,12 @@
     import Navbar from '$lib/components/Navbar.svelte';
     import Footer from '$lib/components/Footer.svelte';
     import {executeQueryVisualisation, type TableSchema, type ColumnInfo} from '$lib/api/database';
-    import {generateComplexSQLbyGPT, type TextToSQLRequest} from '$lib/api';
+    import {
+        generateComplexSQLbyGPT,
+        getCustomSchemaComplex,
+        listCustomDatabases,
+        type TextToSQLRequest
+    } from '$lib/api';
     import {
         ChevronRight,
         Loader,
@@ -13,7 +18,8 @@
         BarChart3,
         RefreshCw,
         AlertCircle,
-        MessageSquare
+        MessageSquare,
+        Database
     } from 'lucide-svelte';
     import Notification from '$lib/components/Notification.svelte';
     import type {Schema, Table, Column} from "$lib/types/table";
@@ -34,8 +40,15 @@
         "List all customers from New York"
     ];
 
+    let rowCountCheck = false;
+
     let notificationMessage: string = "";
     let notificationType: 'success' | 'error' = 'success';
+
+    // Database selection related variables
+    let availableDatabases: Array<{UUID: string, name: string, DBType: string, description?: string}> = [];
+    let selectedDatabaseUUID: string = "";
+    let isLoadingDatabases: boolean = false;
 
     // Convert ColumnInfo to Column
     function convertColumnInfoToColumn(columnInfo: ColumnInfo): Column {
@@ -49,9 +62,28 @@
         };
     }
 
-    // Convert the backend schema to the frontend Schema format
-    function transformSchemaFormat(complexSchema: Record<string, TableSchema> | null | undefined): Schema {
+    function transformSchemaFormat(complexSchema: Record<string, TableSchema> | { tables: any[] } | null | undefined): Schema {
         if (!complexSchema) return { tables: [] };
+
+        if (Array.isArray((complexSchema as any).schema)) {
+            return {
+                tables: (complexSchema as any).schema.map((table: any) => ({
+                    name: table.name,
+                    columns: table.columns.map(convertColumnInfoToColumn),
+                    primaryKey: table.primaryKey || ''
+                }))
+            };
+        }
+
+        if (Array.isArray((complexSchema as any).tables)) {
+            return {
+                tables: (complexSchema as any).tables.map((table: any) => ({
+                    name: table.name,
+                    columns: table.columns.map(convertColumnInfoToColumn),
+                    primaryKey: table.primaryKey || ''
+                }))
+            };
+        }
 
         return {
             tables: Object.entries(complexSchema).map(([tableId, tableSchema]) => ({
@@ -62,27 +94,89 @@
         };
     }
 
-    const schema = transformSchemaFormat(data.schema);
+    let schema = transformSchemaFormat(data.schema);
+
+    async function loadUserDatabases() {
+        try {
+            isLoadingDatabases = true;
+            // Add the built-in database as the first option
+            availableDatabases = [{
+                UUID: "", // Empty UUID indicates the built-in database
+                name: "Built-in Database",
+                DBType: "sqlite",
+                description: "Default SQLite database"
+            }];
+
+            // Fetch user's custom databases
+            const response = await listCustomDatabases();
+            if (!response) {
+                throw new Error('Failed to fetch databases');
+            }
+
+            const customDatabases = await response;
+            if (Array.isArray(customDatabases)) {
+                availableDatabases = [...availableDatabases, ...customDatabases];
+            }
+
+            // Select the built-in database by default
+            selectedDatabaseUUID = "";
+
+            notificationMessage = "Databases loaded successfully";
+            notificationType = 'success';
+        } catch (error) {
+            console.error("Error loading databases:", error);
+            errorMessage = error instanceof Error ? error.message : 'Failed to load databases';
+
+            notificationMessage = "Failed to load databases";
+            notificationType = 'error';
+        } finally {
+            isLoadingDatabases = false;
+        }
+    }
+
+    // Initialize by loading databases
+    loadUserDatabases();
+
+    // Function to handle database change
+    // Fixed function to handle database change
+    async function handleDatabaseChange() {
+        if (stage !== 'input') {
+            resetQuery();
+        }
+
+        try {
+            if (selectedDatabaseUUID) {
+                const customSchema = await getCustomSchemaComplex(selectedDatabaseUUID);
+                schema = transformSchemaFormat(customSchema);
+            } else {
+                // Use the built-in database schema
+                schema = transformSchemaFormat(data.schema);
+            }
+        } catch (error) {
+            console.error("Error loading schema for database:", error);
+            errorMessage = error instanceof Error ? error.message : 'Failed to load database schema';
+
+            notificationMessage = "Failed to load database schema";
+            notificationType = 'error';
+        }
+    }
 
     async function processNaturalLanguageQuery() {
         try {
             isLoading = true;
             errorMessage = null;
 
-            let schema: Schema | null = null;
-
-            if (data.schema && Object.keys(data.schema).length > 0) {
-                schema = transformSchemaFormat(data.schema);
-                console.log(schema);
-            } else {
-                errorMessage = "Failed to load schema from backend.";
+            if (!schema || !schema.tables || schema.tables.length === 0) {
+                errorMessage = "No database schema available. Please select a valid database.";
+                notificationMessage = "No schema available";
+                notificationType = 'error';
+                return;
             }
 
-            if (schema) {
-                const response: TextToSQLRequest = await generateComplexSQLbyGPT(naturalLanguageQuery, schema);
-                console.log(response);
-                sqlQuery = response.sql;
-            }
+            console.log("Using schema for query:", schema);
+            const response: TextToSQLRequest = await generateComplexSQLbyGPT(naturalLanguageQuery, schema);
+            console.log("Generated SQL response:", response);
+            sqlQuery = response.sql;
 
             stage = 'sql';
 
@@ -105,10 +199,11 @@
             isProcessing = true;
             errorMessage = null;
 
-            const result = await executeQueryVisualisation(sqlQuery);
+            // Pass the selected database UUID to the execution function
+            queryResult = await executeQueryVisualisation(sqlQuery, selectedDatabaseUUID);
 
             if (sqlQuery.trim().toUpperCase().startsWith('SELECT')) {
-                svgContent = result.svg;
+                svgContent = queryResult.svg;
 
                 notificationMessage = "Query executed and visualization generated";
                 notificationType = 'success';
@@ -121,6 +216,9 @@
 
             stage = 'result';
 
+            console.log(queryResult)
+
+            rowCountCheck = queryResult && queryResult.row_count > 0
         } catch (error) {
             console.error("Error executing SQL or generating visualization:", error);
             errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
@@ -149,6 +247,7 @@
         notificationMessage = "Example selected";
         notificationType = 'success';
     }
+
     function downloadSVGAsImage() {
         const svgElement = new DOMParser().parseFromString(svgContent, 'image/svg+xml').documentElement;
 
@@ -194,6 +293,60 @@
                 </div>
             </div>
         {/if}
+
+        <!-- Database Selection -->
+        <div class="mb-6">
+            <div class="flex items-center mb-2">
+                <Database class="w-5 h-5 text-blue-600 mr-2" />
+                <h2 class="text-lg font-semibold text-gray-700">Select Database</h2>
+            </div>
+
+            <div class="bg-white p-4 rounded-lg shadow-md">
+                {#if isLoadingDatabases}
+                    <div class="flex items-center justify-center p-4">
+                        <Spinner size="md" color="primary" variant="border" />
+                        <span class="ml-2 text-gray-600">Loading databases...</span>
+                    </div>
+                {:else}
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                        <div class="w-full sm:w-2/3">
+                            <select
+                                    bind:value={selectedDatabaseUUID}
+                                    on:change={handleDatabaseChange}
+                                    class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+                            >
+                                {#each availableDatabases as db}
+                                    <option value={db.UUID}>
+                                        {db.name} ({db.DBType})
+                                    </option>
+                                {/each}
+                            </select>
+                        </div>
+                        <button
+                                class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
+                                on:click={loadUserDatabases}
+                        >
+                            <RefreshCw class="w-4 h-4 inline mr-1" />
+                            Refresh
+                        </button>
+                    </div>
+
+                    {#if selectedDatabaseUUID !== ""}
+                        <div class="mt-2 text-sm text-gray-500">
+                            {#if availableDatabases.find(db => db.UUID === selectedDatabaseUUID)?.description}
+                                {availableDatabases.find(db => db.UUID === selectedDatabaseUUID)?.description}
+                            {:else}
+                                Using custom database: {availableDatabases.find(db => db.UUID === selectedDatabaseUUID)?.name}
+                            {/if}
+                        </div>
+                    {:else}
+                        <div class="mt-2 text-sm text-gray-500">
+                            Using built-in SQLite database
+                        </div>
+                    {/if}
+                {/if}
+            </div>
+        </div>
 
         <div class="mb-8">
             <div class="flex items-center mb-2">
@@ -352,7 +505,7 @@
                     <div>
                         <h3 class="text-lg font-medium mb-2">Data Results</h3>
 
-                        {#if queryResult && queryResult.row_count > 0}
+                        {#if rowCountCheck}
                             <div class="overflow-x-auto">
                                 <table class="min-w-full divide-y divide-gray-200">
                                     <thead class="bg-gray-50">
@@ -367,7 +520,7 @@
                                     <tbody class="bg-white divide-y divide-gray-200">
                                     {#each queryResult.result as row}
                                         <tr>
-                                            {#each Object.values(row) as cell}
+                                            {#each row.values as cell}
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                     {cell}
                                                 </td>

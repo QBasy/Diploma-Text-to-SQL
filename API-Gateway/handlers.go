@@ -102,6 +102,12 @@ func databaseRoutes(r *gin.Engine) {
 		dbGroup.GET("/schema-complex", proxyHandler(databaseServiceURL))
 		dbGroup.POST("/tables", proxyHandler(databaseServiceURL))
 		dbGroup.POST("/visualise", proxyHandler(databaseServiceURL))
+
+		dbGroup.POST("/custom/add", proxyHandler(databaseServiceURL))
+		dbGroup.DELETE("/custom/delete", proxyHandler(databaseServiceURL))
+		dbGroup.GET("/custom/schema", proxyHandler(databaseServiceURL))
+		dbGroup.GET("/custom/schema-complex", proxyHandler(databaseServiceURL))
+		dbGroup.GET("/custom/list", proxyHandler(databaseServiceURL))
 	}
 }
 

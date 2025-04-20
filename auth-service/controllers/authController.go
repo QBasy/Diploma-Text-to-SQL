@@ -3,8 +3,6 @@ package controllers
 import (
 	"auth-service/models"
 	"auth-service/utils"
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -81,41 +79,22 @@ func (uc *AuthController) Register(c *gin.Context) {
 		return
 	}
 
-	dbRequest := CreateDatabaseRequest{
+	token := uuid.New().String()
+	expiry := time.Now().Add(3 * time.Hour)
+
+	verificationToken := models.EmailVerificationToken{
 		UserUUID: user.UUID,
-		Name:     "default",
+		Token:    token,
+		Expiry:   expiry,
+	}
+	if err := uc.db.Create(&verificationToken).Error; err != nil {
+		log.Printf("Failed to create email verification token: %v", err)
 	}
 
-	apiGatewayURL := utils.GetEnv("API_GATEWAY_URL", "http://localhost:5001")
+	confirmURL := fmt.Sprintf("%s/api/auth/confirm-email?token=%s", utils.GetEnv("API_GATEWAY_URL", ""), token)
+	_ = utils.SendEmail(user.Email, "Email Verification", "Click the link to verify your email: "+confirmURL)
 
-	jsonBody, err := json.Marshal(dbRequest)
-	if err != nil {
-		log.Printf("JSON marshal error: %v", err)
-		uc.db.Delete(&user)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to prepare database creation request"})
-		return
-	}
-
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/api/database/create-database", apiGatewayURL), bytes.NewBuffer(jsonBody))
-	if err != nil {
-		log.Printf("Request creation error: %v", err)
-		uc.db.Delete(&user)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create request to database service"})
-		return
-	}
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("X-Auth-Service-Secret", utils.GetEnv("SECRET_KEY", ""))
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil || resp.StatusCode != http.StatusOK {
-		log.Printf("Failed to create database: %v | Status: %v", err, resp.StatusCode)
-		uc.db.Delete(&user)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user database"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "User registered successfully", "uuid": user.UUID})
+	c.JSON(http.StatusOK, gin.H{"message": "Check your email to confirm your account"})
 }
 
 func (uc *AuthController) Login(c *gin.Context) {

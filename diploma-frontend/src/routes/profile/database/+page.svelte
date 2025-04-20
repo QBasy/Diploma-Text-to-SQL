@@ -112,6 +112,10 @@
         >
             Create Table
         </button>
+        <a class="px-3 py-2 text-sm rounded-lg font-medium transition-colors duration-200 {activeTab === 'table' ? 'bg-blue-600 text-white shadow' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
+           href="/profile/database/custom">
+            Custom Database
+        </a>
     </div>
 
     {#if loading}

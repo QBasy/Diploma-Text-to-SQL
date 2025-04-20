@@ -50,3 +50,4 @@ export * from './auth';
 export * from './database';
 export * from './text-to-sql';
 export * from './history';
+export * from './customDatabase';

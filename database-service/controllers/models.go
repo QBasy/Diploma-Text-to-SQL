@@ -36,11 +36,13 @@ type CreateDatabaseRequest struct {
 }
 
 type VisualisationRequest struct {
-	Query string `json:"query"`
+	Query        string `json:"query"`
+	DatabaseUUID string `json:"databaseUUID"`
 }
 
 type ExecuteSQLRequest struct {
-	Query string `json:"query"`
+	Query        string `json:"query"`
+	DatabaseUUID string `json:"database_uuid"`
 }
 
 type DatabaseController struct {

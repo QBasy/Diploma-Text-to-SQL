@@ -7,7 +7,10 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/lib/pq"
 	"google.golang.org/grpc"
+	"gorm.io/gorm"
 	"log"
 	"net/http"
 	"strings"
@@ -19,28 +22,23 @@ func (dc *DatabaseController) VisualiseQuery(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
 		return
 	}
+
 	userUUID, err := utils.GetUserUUIDFromRequest(c)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	var userDatabase models.UserDatabase
-	if err := dc.db.Where("user_uuid = ?", userUUID).First(&userDatabase).Error; err != nil {
-		log.Printf("Error fetching database for UUID %s: %v", userUUID, err)
-		c.JSON(http.StatusNotFound, gin.H{"error": "Database not found"})
-		return
-	}
 
-	sqliteDB, err := sql.Open("sqlite", userDatabase.Path)
+	log.Println(request)
+	dbConn, dbTypes, err := GetDatabaseConnection(dc.db, userUUID, request.DatabaseUUID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to connect to database"})
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
-	defer sqliteDB.Close()
-	log.Printf("1 %v", request.Query)
-	rows, err := sqliteDB.Query(request.Query)
+	defer dbConn.Close()
+
+	rows, err := dbConn.Query(request.Query)
 	if err != nil {
-		log.Printf("Error querying database for query: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid SQL query"})
 		return
 	}
@@ -52,7 +50,6 @@ func (dc *DatabaseController) VisualiseQuery(c *gin.Context) {
 		return
 	}
 
-	log.Printf("cols: %v", cols)
 	var queryResult pb.QueryResult
 	queryResult.SqlQuery = request.Query
 
@@ -62,40 +59,55 @@ func (dc *DatabaseController) VisualiseQuery(c *gin.Context) {
 		for i := range columnVals {
 			columnPtrs[i] = &columnVals[i]
 		}
-
 		if err := rows.Scan(columnPtrs...); err != nil {
-			log.Printf("Error scanning row: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process row data"})
 			return
 		}
-
-		rowData := pb.Row{}
-		for _, col := range columnVals {
-			rowData.Values = append(rowData.Values, fmt.Sprintf("%v", col))
+		row := &pb.Row{}
+		for _, val := range columnVals {
+			row.Values = append(row.Values, fmt.Sprintf("%v", val))
 		}
-		queryResult.Result = append(queryResult.Result, &rowData)
+		queryResult.Result = append(queryResult.Result, row)
 	}
 
-	log.Println("1")
 	conn, err := grpc.Dial(utils.GetEnv("VISUALISATION_SERVICE", "localhost:5007"), grpc.WithInsecure())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to connect to visualisation service"})
 		return
 	}
 	defer conn.Close()
-	log.Println("2")
+
 	client := pb.NewVisualisationServiceClient(conn)
 	svgResponse, err := client.GenerateChart(c, &queryResult)
+
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate visualization"})
+		fallbackSVG := `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="200" viewBox="0 0 600 200">
+            <rect width="600" height="200" fill="#f8f9fa" rx="10" ry="10" />
+            <text x="300" y="80" font-family="Arial, sans-serif" font-size="18" text-anchor="middle" fill="#6c757d">
+                We're unable to visualize this query at the moment
+            </text>
+            <text x="300" y="120" font-family="Arial, sans-serif" font-size="14" text-anchor="middle" fill="#6c757d">
+                Try a different query with aggregations or fewer columns
+            </text>
+        </svg>`
+
+		c.JSON(http.StatusOK, gin.H{
+			"svg":                 fallbackSVG,
+			"result":              queryResult.Result,
+			"columns":             cols,
+			"row_count":           len(queryResult.Result),
+			"db_type":             dbTypes[0],
+			"visualization_error": "This query cannot be visualized effectively",
+		})
 		return
 	}
-	log.Println("3")
+
 	c.JSON(http.StatusOK, gin.H{
 		"svg":       svgResponse.Svg,
 		"result":    queryResult.Result,
 		"columns":   cols,
 		"row_count": len(queryResult.Result),
+		"db_type":   dbTypes[0],
 	})
 }
 
@@ -112,52 +124,38 @@ func (dc *DatabaseController) ExecuteSQL(c *gin.Context) {
 		return
 	}
 
-	var userDatabase models.UserDatabase
-	if err := dc.db.Where("user_uuid = ?", userUUID).First(&userDatabase).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Database not found"})
-		return
-	}
-
-	sqliteDB, err := sql.Open("sqlite", userDatabase.Path)
+	dbConn, _, err := GetDatabaseConnection(dc.db, userUUID, request.DatabaseUUID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to connect to database"})
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
-	defer sqliteDB.Close()
+	defer dbConn.Close()
 
-	if !(isSelectQuery(request.Query) || isCreateQuery(request.Query) || isDropQuery(request.Query) || isInsertQuery(request.Query) || isUpdateQuery(request.Query) || isDeleteQuery(request.Query)) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Query type not allowed"})
-		return
-	}
+	query := strings.TrimSpace(request.Query)
+	upperQuery := strings.ToUpper(query)
 
-	if isSelectQuery(request.Query) {
-		rows, err := sqliteDB.Query(request.Query)
+	switch {
+	case isSelectQuery(upperQuery):
+		rows, err := dbConn.Query(query)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid SQL query"})
 			return
 		}
 		defer rows.Close()
 
-		cols, err := rows.Columns()
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch column information"})
-			return
-		}
-
+		cols, _ := rows.Columns()
 		var result []map[string]interface{}
+
 		for rows.Next() {
 			columns := make([]interface{}, len(cols))
 			columnPtrs := make([]interface{}, len(cols))
 			for i := range columns {
 				columnPtrs[i] = &columns[i]
 			}
-
 			if err := rows.Scan(columnPtrs...); err != nil {
-				log.Printf("Error scanning row: %v", err)
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process row data"})
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to scan row"})
 				return
 			}
-
 			rowMap := make(map[string]interface{})
 			for i, col := range cols {
 				rowMap[col] = columns[i]
@@ -171,15 +169,17 @@ func (dc *DatabaseController) ExecuteSQL(c *gin.Context) {
 			"result":    result,
 		})
 		return
-	}
 
-	_, err = sqliteDB.Exec(request.Query)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to execute SQL query"})
-		return
+	case isCreateQuery(upperQuery), isDropQuery(upperQuery), isInsertQuery(upperQuery), isUpdateQuery(upperQuery), isDeleteQuery(upperQuery):
+		_, err := dbConn.Exec(query)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to execute SQL query"})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"message": "Query executed successfully"})
+	default:
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Query type not allowed"})
 	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "Query executed successfully"})
 }
 
 func isSelectQuery(query string) bool {
@@ -204,4 +204,80 @@ func isUpdateQuery(query string) bool {
 
 func isDeleteQuery(query string) bool {
 	return strings.HasPrefix(strings.ToUpper(query), "DELETE")
+}
+
+type Queryable interface {
+	Query(query string, args ...any) (*sql.Rows, error)
+	Exec(query string, args ...any) (sql.Result, error)
+	Close() error
+}
+
+func GetDatabaseConnection(db *gorm.DB, userUUID, dbUUID string) (Queryable, []string, error) {
+	if dbUUID == "" {
+		log.Printf("WTF")
+		var userDB models.UserDatabase
+		if err := db.Where("user_uuid = ?", userUUID).First(&userDB).Error; err != nil {
+			defaultPath := fmt.Sprintf("./data/users/%s/default.db", userUUID)
+			sqliteDB, err := sql.Open("sqlite", defaultPath)
+			if err != nil {
+				return nil, nil, err
+			}
+			return sqliteDB, []string{"sqlite"}, nil
+		}
+
+		sqliteDB, err := sql.Open("sqlite", userDB.Path)
+		if err != nil {
+			return nil, nil, err
+		}
+		return sqliteDB, []string{"sqlite"}, nil
+	}
+
+	var customDB models.CustomDatabase
+	if err := db.Where("uuid = ? AND user_uuid = ?", dbUUID, userUUID).First(&customDB).Error; err != nil {
+		return nil, nil, fmt.Errorf("database not found or not authorized: %v", err)
+	}
+
+	var dsn string
+	switch customDB.DBType {
+	case "postgres":
+		log.Println("FINE")
+		dsn = fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
+			customDB.Host, customDB.Port, customDB.Username, customDB.Password, customDB.Database, customDB.SSLMode)
+		conn, err := sql.Open("postgres", dsn)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to connect to PostgreSQL: %v", err)
+		}
+		if err := conn.Ping(); err != nil {
+			conn.Close()
+			return nil, nil, fmt.Errorf("could not establish connection to PostgreSQL: %v", err)
+		}
+		return conn, []string{"postgres"}, nil
+
+	case "sqlite":
+		conn, err := sql.Open("sqlite", customDB.Database)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to connect to SQLite: %v", err)
+		}
+		if err := conn.Ping(); err != nil {
+			conn.Close()
+			return nil, nil, fmt.Errorf("could not establish connection to SQLite: %v", err)
+		}
+		return conn, []string{"sqlite"}, nil
+
+	case "mysql":
+		dsn = fmt.Sprintf("%s:%s@tcp(%s:%d)/%s",
+			customDB.Username, customDB.Password, customDB.Host, customDB.Port, customDB.Database)
+		conn, err := sql.Open("mysql", dsn)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to connect to MySQL: %v", err)
+		}
+		if err := conn.Ping(); err != nil {
+			conn.Close()
+			return nil, nil, fmt.Errorf("could not establish connection to MySQL: %v", err)
+		}
+		return conn, []string{"mysql"}, nil
+
+	default:
+		return nil, nil, fmt.Errorf("unsupported database type: %s", customDB.DBType)
+	}
 }

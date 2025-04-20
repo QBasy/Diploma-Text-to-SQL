@@ -31,6 +31,17 @@ func SetupRouter() *gin.Engine {
 		api.GET("/schema-complex", databaseController.GetFullDatabaseSchema)
 
 		api.POST("/visualise", databaseController.VisualiseQuery)
+
+		custom := api.Group("/custom")
+		{
+			custom.POST("/add", databaseController.AddCustomDatabase)
+			custom.DELETE("/delete", databaseController.DeleteCustomDatabase)
+
+			custom.GET("/schema", databaseController.GetCustomDatabaseSchema)
+			custom.GET("/schema-complex", databaseController.GetFullCustomDatabaseSchema)
+
+			custom.GET("/list", databaseController.ListCustomDatabases)
+		}
 	}
 
 	r.GET("/health", controllers.HealthCheck)

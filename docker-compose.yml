@@ -1,0 +1,117 @@
+services:
+  api:
+    build:
+      context: API-Gateway
+      dockerfile: Dockerfile
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=japierdole
+      - DB_NAME=mvpdiploma
+      - SERVER_PORT=5001
+    ports:
+      - "5001:5001"
+    networks:
+      - default
+    depends_on:
+      - db
+
+  database_service:
+    container_name: database-service-container
+    build:
+      context: ./database-service
+      dockerfile: Dockerfile
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=japierdole
+      - DB_NAME=mvpdiploma
+      - SECRET_KEY=YAKNOW
+      - SERVER_PORT=5002
+    depends_on:
+      - db
+      - visualisation-service
+    ports:
+      - "5002:5002"
+
+  auth_service:
+    container_name: auth_service-container
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=japierdole
+      - DB_NAME=mvpdiploma
+      - SECRET_KEY=YAKNOW
+      - SERVER_PORT=5003
+    depends_on:
+      - db
+      - database_service
+    ports:
+      - "5003:5003"
+  text_to_sql_service:
+    container_name: text_to_sql_service-container
+    build:
+      context: ./text-to-sql-service-go
+      dockerfile: Dockerfile
+    ports:
+      - "5006:5006"
+    depends_on:
+      - api
+
+  history_service:
+    container_name: history_service-container
+    build:
+      context: ./history-service
+      dockerfile: Dockerfile
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=japierdole
+      - DB_NAME=mvpdiploma
+      - SECRET_KEY=YAKNOW
+      - SERVER_PORT=5008
+    ports:
+      - "5006:5006"
+
+  visualisation-service:
+    container_name: visualisation_service-container
+    build:
+      context: ./visualisation-service
+      dockerfile: Dockerfile
+    ports:
+      - "5007:5007"
+    volumes:
+      - ./visualisation-service/local.yaml:/app/local.yaml
+
+  diploma_frontend:
+    build:
+      context: ./diploma-frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    depends_on:
+      - api
+    environment:
+      - VITE_API_URL=http://diploma-text-to-sql-api-1:5173
+
+
+  db:
+    image: postgres:latest
+    environment:
+      - POSTGRES_DB=mvpdiploma
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=japierdole
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+volumes:
+  postgres_data:
+    driver: local

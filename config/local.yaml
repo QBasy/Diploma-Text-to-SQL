@@ -1,0 +1,5 @@
+ApiGatewayURL: "localhost:5001"
+API-KEY: ""
+PORT: "5009"
+VisualisationService: "localhost:5007"
+GATEWAY: "localhost:5001"

@@ -12,7 +12,7 @@
 
 ### Structure
 
-![image](https://github.com/user-attachments/assets/76d19dfa-8c7d-4f73-9271-80a9c865e593)
+![image](https://github.com/user-attachments/assets/4bff83a0-f527-4107-9e81-3eac24398d97)
 
 
 ```go
@@ -21,48 +21,28 @@ Diploma-text-to-SQL/
 	// and links database-service and text-to-sql
 	// Go & Gin
     API/
-        test/
-            handlers_test.go
-        main.go
-        routes.go
-        handlers.go
-        go.mod
-        .env
-        Dockerfile
+
+	// Service working with user tokens
+	// Login, Registration, Resetting password, SMTP
+	// User information
+    auth-service/
 	
 	// A service for direct work with the database
 	// Go & GORM
     database-service/
-	middlewares/
-	    AuthMiddleware.go
-        models/
-            user.go
-            database.go
-        controllers/
-            databaseController.go
-	utils/
-	    getEnv.go
-	    jwt.go
-	    migration.go
-	/database/user_databases/[user_id].sqlite
-        main.go
-        routes.go
-        go.mod
-        .env
-        Dockerfile
 
-	// A main service for this diploma work, 
+	// Service working with AI, 
 	// it translates natural language into a SQL queries
-	// Python, FastAPI & Transformers
+	// Go, Llama 4, Groqcloud
     text-to-SQL-service/
-        .venv/
-        main.py
-        requirements.txt
-        text_to_sql.log
-        Dockerfile
+
+	// Visualising Data into Charts,
+	// Pier, Scatter, Bar, Line
+	// Go & SVG
+    visualisation-service/
 	
 	// A frontend of this project
-	// Vite, SvelteKit & TailwindCSS
+	// Vite, TypeScript, SvelteKit & TailwindCSS
     diploma-frontend/
 ```
 

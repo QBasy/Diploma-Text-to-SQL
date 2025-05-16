@@ -33,6 +33,12 @@ func CreateComplexPrompt(req *model.Request) (string, string) {
     Convert this natural language query to a valid SQL statement:
     "%s"
     
+    For visualization purposes, note the following chart type detection rules:
+    - Queries containing "percent" or "ratio" will generate PIE charts
+    - Queries containing "count", "sum", or "group by" will generate BAR charts
+    - Queries containing "date", "time", "strftime", or "month" will generate LINE charts
+    - Queries with multiple numeric columns will generate SCATTER charts
+    
     Return only the SQL code without any explanation.
     `, schemaText, req.Query)
 

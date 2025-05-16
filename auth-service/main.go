@@ -30,7 +30,7 @@ func init() {
 	if err != nil {
 		log.Fatalf("AuthService: Failed to connect Database %v", err)
 	}
-	_ = db.AutoMigrate(&models.User{}, &models.UserDatabase{}, &models.PasswordResetToken{})
+	_ = db.AutoMigrate(&models.User{}, &models.UserDatabase{}, &models.PasswordResetToken{}, &models.EmailVerificationToken{})
 }
 
 func main() {
@@ -45,6 +45,7 @@ func main() {
 		auth.POST("/reset-password", userController.ResetPassword)
 		auth.POST("/change-password", userController.ChangePassword)
 		auth.GET("/me", userController.GetMe)
+		auth.POST("/confirm", userController.ConfirmEmail)
 
 		authGoogle := auth.Group("/google")
 		{

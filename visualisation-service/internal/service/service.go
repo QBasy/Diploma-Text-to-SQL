@@ -38,26 +38,26 @@ func GenerateChart(data *pb.QueryResult) (*bytes.Buffer, error) {
 }
 
 func determineChartType(query string, results []*pb.Row) string {
-	log.Printf("2 1")
 	query = strings.ToLower(query)
+
+	if strings.Contains(query, "percent") || strings.Contains(query, "ratio") {
+		return ChartTypePie
+	}
 
 	if strings.Contains(query, "count") || strings.Contains(query, "sum") ||
 		strings.Contains(query, "group by") {
 		return ChartTypeBar
 	}
 
-	if strings.Contains(query, "date") || strings.Contains(query, "time") {
+	if strings.Contains(query, "date") || strings.Contains(query, "time") ||
+		strings.Contains(query, "strftime") || strings.Contains(query, "month") {
 		return ChartTypeLine
 	}
 
-	if strings.Contains(query, "percent") || strings.Contains(query, "ratio") {
-		return ChartTypePie
-	}
-	log.Printf("2 2")
-	numericColumns := 0
 	if len(results) > 0 && len(results[0].Values) >= 2 {
+		numericColumns := 0
 		for i := 0; i < len(results[0].Values); i++ {
-			if _, err := strconv.ParseFloat(results[1].Values[i], 64); err == nil {
+			if _, err := strconv.ParseFloat(results[0].Values[i], 64); err == nil {
 				numericColumns++
 			}
 		}
@@ -65,7 +65,7 @@ func determineChartType(query string, results []*pb.Row) string {
 			return ChartTypeScatter
 		}
 	}
-	log.Printf("2 3")
+
 	return ChartTypeBar
 }
 

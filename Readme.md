@@ -1,94 +1,143 @@
-# Diploma Workk
+# 📊 Automatic Data Visualization from Natural Language Queries
 
-## Text-to-SQL
+This project enables users to type natural language questions like  
+**"Show total revenue by month for 2023"**  
+and instantly receive:
+- An **auto-generated SQL query**
+- An **interactive visualization** (SVG chart)
 
-### How to run?
-#### You can run the .sh file by using CMD
-```shell
+It is designed to support **non-technical users** with no SQL knowledge and is powered by a scalable **microservices architecture** and an **LLM-based query engine**.
 
-```
-#### or You can start the ```start.sh``` file by using your interpreter
+---
 
+### 📝 Natural Language Query Input
 
-### Structure
+![Снимок экрана 2025-05-16 202918](https://github.com/user-attachments/assets/6e58a0de-87d3-4d34-b96f-ae398b269502)
 
-![image](https://github.com/user-attachments/assets/4bff83a0-f527-4107-9e81-3eac24398d97)
+---
 
+### 🧠 Auto-generated SQL Query
 
-```go
+![Снимок экрана 2025-05-16 202932](https://github.com/user-attachments/assets/bd28253b-996a-4198-bc72-0acb6af8d36f)
+
+---
+
+### 📈 Real-time Visualization
+
+![Снимок экрана 2025-05-16 141739](https://github.com/user-attachments/assets/39f496e2-a965-4db2-8452-43941689ff38)
+![Снимок экрана 2025-05-16 202954](https://github.com/user-attachments/assets/d8cd9c44-564e-43ae-9c65-ba45e4b43c1f)
+
+---
+
+## 🧠 How It Works
+
+- Text queries are processed using an **LLM (meta-llama/llama-4-scout-17b-16e-instruct)** hosted via **GroqCloud**
+- The system selects **simple or complex prompts** dynamically depending on query complexity
+- SQL is executed against a PostgreSQL or SQLite database
+- If results are visualizable, the system returns a **scalable SVG chart** for the frontend
+
+---
+
+## 🖥 Frontend
+
+### ➤ `diploma-frontend`
+- **Framework**: [SvelteKit](https://kit.svelte.dev/)
+- **Styling**: [TailwindCSS](https://tailwindcss.com/)
+- **UI/Icons**: [Lucide](https://lucide.dev/)
+- **Features**:
+  - Natural language input
+  - Schema uploading
+  - Visual feedback
+  - Authentication and history tracking
+
+---
+
+## ⚙️ Backend (Microservices)
+
+| Service                | Tech Stack                               | Description                                                                 |
+|------------------------|-------------------------------------------|-----------------------------------------------------------------------------|
+| `API Gateway`          | Go + Gin                                  | Routes requests, handles rate limiting and CORS                            |
+| `text-to-sql-service`  | Go + Groqcloud + Llama                    | Converts natural language to SQL using LLaMA 4 Scout                       |
+| `database-service`     | Go + Gin + PostgreSQL/SQLite + GORM       | Executes SQL, manages user DBs, exposes schema                             |
+| `visualisation-service`| Go + gRPC + SVG                           | Converts SQL result into vector visualizations                             |
+| `auth-service`         | Go + Gin + JWT + PostgreSQL               | Handles registration, login, token auth, Google OAuth                      |
+| `history-service`      | Go + Gin + PostgreSQL                     | Saves and returns past user queries                                        |
+
+  
+---
+
+## 📁 Project Structure
+
 Diploma-text-to-SQL/
-	// A service that accepts requests from frontend 
-	// and links Other services with one port
-	// Go & Gin
-    API/
 
-	// Service working with user tokens
-	// Login, Registration, Resetting password, SMTP
-	// User information
-    auth-service/
-	
-	// A service for direct work with the database
-	// Go & GORM
-    database-service/
+├── API/
 
-	// Service working with AI, 
-	// it translates natural language into a SQL queries
-	// Go, Llama 4, Groqcloud
-    text-to-SQL-service/
+├── auth-service/
 
-	// Visualising Data into Charts,
-	// Pier, Scatter, Bar, Line
-	// Go & SVG
-    visualisation-service/
-	
-	// A frontend of this project
-	// Vite, TypeScript, SvelteKit & TailwindCSS
-    diploma-frontend/
-```
+├── database-service/
 
-### Client-Side Structure
+├── text-to-sql-service/
 
-```
+├── visualisation-service/
+
+└── diploma-frontend/
+
+---
+
+### 🎨 Client Side Structure
+
 src/
+
 ├── routes/
-│   ├── +page.svelte
-│   ├── +layout.svelte
-│   ├── auth/
-│   │   ├── +page.svelte
-│   │   └── +layout.svelte
-│   ├── documentation/
-│   │   └── +page.svelte
-│   ├── generate/
-│   │   ├── complex/
-│   │   │   └── +page.svelte
-│   │   └── simple/
-│   │       └── +page.svelte
-│   └── profile/
-│       ├── +page.svelte
-│   	├── database/
-│   	│   └── +page.svelte
-│   	├── history/
-│   	│   └── +page.svelte
-│       └── settings/
-│	    └── +page.svelte
+
+│ ├── auth/
+
+│ ├── documentation/
+
+│ ├── generate/simple/
+
+│ ├── generate/complex/
+
+│ └── profile/ (database, history, settings)
+
 ├── lib/
-│   ├── components/
-│   │   ├── Navbar.svelte
-│   │   ├── Footer.svelte
-│   │   ├── Notification.svelte
-│   │   └── LoadingSpinner.svelte
-│   ├── stores/
-│   │   ├── userStore.ts
-│   │   ├── schemaStore.ts
-│   │   ├── historyStore.ts
-│   │   └── index.ts
-│   ├── api/
-│   │   ├── auth.ts
-│   │   ├── database.ts
-│   │   ├── history.ts
-│   │   ├── text-to-sql.ts
-│   │   ├── index.ts
-│   └── types/
-│       └── table.ts
+
+│ ├── components/
+
+│ ├── stores/
+
+│ ├── api/
+
+│ └── types/
+
 └── app.html
-```
+
+---
+
+## 🛡️ Security
+
+- **JWT-based authentication**
+- **CORS** for safe frontend/backend interaction
+- **Rate limiting** (100 requests/minute per IP)
+
+---
+
+## 🔧 Tools and Technologies Used
+
+- **LLM**: meta-llama/llama-4-scout-17b-16e-instruct
+- **Frontend**: SvelteKit + TailwindCSS + Lucide
+- **Backend**: Go (Gin, GORM), FastAPI, gRPC
+- **Database**: PostgreSQL, SQLite
+- **Visualization**: SVG chart service (custom, gRPC-based)
+- **Security**: JWT, HTTPS, CORS, Rate Limiting
+
+---
+
+## 🚀 Run the Project (Coming Soon)
+
+> _Setup instructions or Dockerfile links can go here_
+
+
+
+
+

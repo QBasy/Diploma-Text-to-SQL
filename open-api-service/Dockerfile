@@ -7,7 +7,7 @@ RUN go mod download
 
 COPY . .
 
-RUN go build -o server ./open-api-service/cmd/server
+RUN go build -o server ./cmd/server
 
 EXPOSE 5009
 

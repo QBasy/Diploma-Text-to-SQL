@@ -71,7 +71,7 @@ services:
     depends_on:
       - db
     restart: always
-  
+
 
   history_service:
     container_name: history_service-container
@@ -99,8 +99,6 @@ services:
       dockerfile: Dockerfile
     ports:
       - "5007:5007"
-    volumes:
-      - ./visualisation-service/config/local.yaml:/app/config/local.yaml
     restart: always
 
   open_api_service:
@@ -110,8 +108,6 @@ services:
       dockerfile: Dockerfile
     ports:
       - "5009:5009"
-    volumes:
-      - ./open-api-service/config/local.yaml:/app/config/local.yaml
     depends_on:
       - db
     restart: always

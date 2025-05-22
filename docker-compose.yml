@@ -2,15 +2,11 @@ version: "3.8"
 
 services:
   api:
+    container_name: api-gateway
     build:
       context: ./API-Gateway
       dockerfile: Dockerfile
     environment:
-      - DB_HOST=db
-      - DB_PORT=5432
-      - DB_USERNAME=postgres
-      - DB_PASSWORD=japierdole
-      - DB_NAME=mvpdiploma
       - SERVER_PORT=5001
       - AUTH_SERVICE_URL=http://auth_service-container:5003
       - DATABASE_SERVICE_URL=http://database-service-container:5002
@@ -35,10 +31,11 @@ services:
       - DB_HOST=db
       - DB_PORT=5432
       - DB_USERNAME=postgres
-      - DB_PASSWORD=japierdole
+      - DB_PASSWORD=somepassword
       - DB_NAME=mvpdiploma
       - SECRET_KEY=YAKNOW
       - SERVER_PORT=5002
+      - VISUALISATION_SERVICE=visualisation_service-container
     depends_on:
       - db
     ports:
@@ -54,7 +51,7 @@ services:
       - DB_HOST=db
       - DB_PORT=5432
       - DB_USERNAME=postgres
-      - DB_PASSWORD=japierdole
+      - DB_PASSWORD=somepassword
       - DB_NAME=mvpdiploma
       - SECRET_KEY=YAKNOW
       - SERVER_PORT=5003
@@ -86,7 +83,7 @@ services:
       - DB_HOST=db
       - DB_PORT=5432
       - DB_USERNAME=postgres
-      - DB_PASSWORD=japierdole
+      - DB_PASSWORD=somepassword
       - DB_NAME=mvpdiploma
       - SECRET_KEY=YAKNOW
       - SERVER_PORT=5008
@@ -114,14 +111,6 @@ services:
       dockerfile: Dockerfile
     ports:
       - "5009:5009"
-    environment:
-      - DB_HOST=db
-      - DB_PORT=5432
-      - DB_USERNAME=postgres
-      - DB_PASSWORD=japierdole
-      - DB_NAME=mvpdiploma
-      - SECRET_KEY=YAKNOW
-      - SERVER_PORT=5009
     volumes:
       - ./open-api-service/config/local.yaml:/app/config/local.yaml
     depends_on:
@@ -133,11 +122,11 @@ services:
       context: ./diploma-frontend
       dockerfile: Dockerfile
     ports:
-      - "5173:5173"
+      - "80:80"
     depends_on:
       - api
     environment:
-      - VITE_API_URL=http://localhost:5001
+      - VITE_API_URL=http://api-gateway:5001
     restart: always
 
   db:
@@ -145,7 +134,7 @@ services:
     environment:
       - POSTGRES_DB=mvpdiploma
       - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=japierdole
+      - POSTGRES_PASSWORD=somepassword
     ports:
       - "5432:5432"
     volumes:

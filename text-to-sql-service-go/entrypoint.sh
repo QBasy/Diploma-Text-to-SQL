@@ -1,9 +1,7 @@
 #!/bin/sh
-mkdir -p /app/config
-
 if [ ! -f /app/config/local.yaml ]; then
+  mkdir -p /app/config
   cat > /app/config/local.yaml <<EOL
-#git ignore
 TTSQL:
   API_KEY: "OPENAI KEY"
   PORT: "5006"

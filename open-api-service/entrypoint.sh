@@ -1,7 +1,6 @@
 #!/bin/sh
-mkdir -p /app/config
-
 if [ ! -f /app/config/local.yaml ]; then
+  mkdir -p /app/config
   cat > /app/config/local.yaml <<EOL
 ApiGatewayURL: "api-gateway:5001"
 PORT: "5009"

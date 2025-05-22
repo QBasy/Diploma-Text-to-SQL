@@ -70,9 +70,8 @@ services:
       - "5006:5006"
     depends_on:
       - db
-    volumes:
-      - ./text-to-sql-service-go/config/local.yaml:/app/config/local.yaml
     restart: always
+  
 
   history_service:
     container_name: history_service-container

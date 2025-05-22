@@ -7,7 +7,7 @@ RUN go mod download
 
 COPY . .
 
-RUN go build -o server ./visualisation-service/cmd/
+RUN go build -o server ./visualisation-service/cmd/server
 
 EXPOSE 5007
 

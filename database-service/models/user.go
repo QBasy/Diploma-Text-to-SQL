@@ -10,5 +10,6 @@ type User struct {
 	Username     string `gorm:"unique"`
 	Email        string `gorm:"unique"`
 	PasswordHash string
+	Role         string
 	Databases    []UserDatabase `gorm:"foreignKey:UserUUID;references:UUID"`
 }

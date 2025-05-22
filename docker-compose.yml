@@ -1,7 +1,9 @@
+version: "3.8"
+
 services:
   api:
     build:
-      context: API-Gateway
+      context: ./API-Gateway
       dockerfile: Dockerfile
     environment:
       - DB_HOST=db
@@ -10,12 +12,19 @@ services:
       - DB_PASSWORD=japierdole
       - DB_NAME=mvpdiploma
       - SERVER_PORT=5001
+      - AUTH_SERVICE_URL=http://auth_service-container:5003
+      - DATABASE_SERVICE_URL=http://database-service-container:5002
+      - TEXT_TO_SQL_SERVICE_URL=http://text_to_sql_service-container:5006
+      - HISTORY_SERVICE_URL=http://history_service-container:5008
     ports:
       - "5001:5001"
-    networks:
-      - default
     depends_on:
       - db
+      - auth_service
+      - database_service
+      - text_to_sql_service
+      - history_service
+    restart: always
 
   database_service:
     container_name: database-service-container
@@ -32,9 +41,9 @@ services:
       - SERVER_PORT=5002
     depends_on:
       - db
-      - visualisation-service
     ports:
       - "5002:5002"
+    restart: always
 
   auth_service:
     container_name: auth_service-container
@@ -51,9 +60,10 @@ services:
       - SERVER_PORT=5003
     depends_on:
       - db
-      - database_service
     ports:
       - "5003:5003"
+    restart: always
+
   text_to_sql_service:
     container_name: text_to_sql_service-container
     build:
@@ -62,7 +72,10 @@ services:
     ports:
       - "5006:5006"
     depends_on:
-      - api
+      - db
+    volumes:
+      - ./text-to-sql-service-go/config/local.yaml:/app/config/local.yaml
+    restart: always
 
   history_service:
     container_name: history_service-container
@@ -78,7 +91,10 @@ services:
       - SECRET_KEY=YAKNOW
       - SERVER_PORT=5008
     ports:
-      - "5006:5006"
+      - "5008:5008"
+    depends_on:
+      - db
+    restart: always
 
   visualisation-service:
     container_name: visualisation_service-container
@@ -88,7 +104,29 @@ services:
     ports:
       - "5007:5007"
     volumes:
-      - ./visualisation-service/local.yaml:/app/local.yaml
+      - ./visualisation-service/config/local.yaml:/app/config/local.yaml
+    restart: always
+
+  open_api_service:
+    container_name: open_api_service-container
+    build:
+      context: ./open-api-service
+      dockerfile: Dockerfile
+    ports:
+      - "5009:5009"
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=japierdole
+      - DB_NAME=mvpdiploma
+      - SECRET_KEY=YAKNOW
+      - SERVER_PORT=5009
+    volumes:
+      - ./open-api-service/config/local.yaml:/app/config/local.yaml
+    depends_on:
+      - db
+    restart: always
 
   diploma_frontend:
     build:
@@ -99,8 +137,8 @@ services:
     depends_on:
       - api
     environment:
-      - VITE_API_URL=http://diploma-text-to-sql-api-1:5173
-
+      - VITE_API_URL=http://localhost:5001
+    restart: always
 
   db:
     image: postgres:latest
@@ -112,6 +150,13 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
+
 volumes:
   postgres_data:
     driver: local

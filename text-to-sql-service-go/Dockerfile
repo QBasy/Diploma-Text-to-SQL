@@ -7,7 +7,7 @@ RUN go mod download
 
 COPY . .
 
-RUN go build -o server ./text-to-sql-service-go/cmd/main.go
+RUN go build -o server ./text-to-sql-service-go/cmd/
 
 EXPOSE 5006
 

@@ -14,8 +14,10 @@ func GenerateChart(data *pb.QueryResult) (*bytes.Buffer, error) {
 		return nil, fmt.Errorf("not enough data to draw graph")
 	}
 
+	log.Printf("Data: %v", data)
+	log.Printf("1 1")
 	chartType := determineChartType(data.SqlQuery, data.Result)
-
+	log.Printf("1 2")
 	switch chartType {
 	case ChartTypeBar:
 		log.Printf("error1")

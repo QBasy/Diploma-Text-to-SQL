@@ -59,9 +59,11 @@ export interface TableSchema {
 }
 
 export async function getCustomSchemaComplex(uuid: string): Promise<Record<string, TableSchema>> {
-    const response = await api.get('/api/database/custom/schema-complex', {
+    const request = await api.get('/api/database/custom/schema-complex', {
         params: { database_uuid: uuid },
     });
+
+    const response = request.data;
 
     if (response && response.schema && Array.isArray(response.schema)) {
         const transformedSchema: Record<string, TableSchema> = {};

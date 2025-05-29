@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { createHistoryEntry } from './history';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://164.92.160.101:5001/';
 
 const api = axios.create({
     baseURL: API_BASE_URL,

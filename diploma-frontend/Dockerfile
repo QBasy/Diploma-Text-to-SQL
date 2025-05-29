@@ -16,8 +16,6 @@ WORKDIR /app
 
 COPY --from=builder /app /app
 
-RUN npm install --production
-
 EXPOSE 4173
 
-CMD ["npm", "run", "preview"]
+CMD ["npm", "run", "preview", "--", "--host", "0.0.0.0"]

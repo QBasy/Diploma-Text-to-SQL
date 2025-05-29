@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 )
 
@@ -16,7 +15,7 @@ func GenerateSQLWithGroc(client *http.Client, prompt, systemMessage string, mode
 			{"role": "user", "content": prompt},
 		},
 	}
-	log.Printf(prompt)
+
 	body, err := json.Marshal(requestBody)
 	if err != nil {
 		return "", fmt.Errorf("error marshaling request body: %v", err)
@@ -55,8 +54,6 @@ func GenerateSQLWithGroc(client *http.Client, prompt, systemMessage string, mode
 	if !ok || sqlQuery == "" {
 		return "", fmt.Errorf("empty SQL response")
 	}
-
-	log.Printf("Generated SQL: %s", sqlQuery)
 
 	return sqlQuery, nil
 }

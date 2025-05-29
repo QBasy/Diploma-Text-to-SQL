@@ -5,7 +5,7 @@ import (
 	"text-to-sql/internal/model"
 )
 
-func CreatePrompt(req *model.Request) (string, string) {
+func CreateSimplePrompt(req *model.Request) (string, string) {
 	prompt := "Convert this natural language query to SQL: " + req.Query
 	systemMessage := "You are a SQL expert. Convert natural language queries to valid SQL statements. Return only the SQL code without any explanation."
 	return prompt, systemMessage

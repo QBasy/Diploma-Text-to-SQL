@@ -51,7 +51,9 @@ services:
       - DB_USERNAME=postgres
       - DB_PASSWORD=somepassword
       - DB_NAME=mvpdiploma
-      - SECRET_KEY=YAKNOW
+      - API_GATEWAY_URL=api-gateway
+      - SECRET_KEY=QKJORMCUTPQRM
+      - JWT_SECRET=QKJORMCUTPQRMRTNHER
       - SERVER_PORT=5003
     depends_on:
       - db

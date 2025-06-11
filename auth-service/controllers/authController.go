@@ -59,24 +59,20 @@ func (uc *AuthController) Register(c *gin.Context) {
 
 	log.Printf("Registering user: %s, %s", request.Name, request.Email)
 
-	// Проверяем, существует ли пользователь
 	var existingUser models.User
 	if err := uc.db.Where("username = ? OR email = ?", request.Name, request.Email).First(&existingUser).Error; err == nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Username or email already exists"})
 		return
 	}
 
-	// Хэшируем пароль
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
 		return
 	}
 
-	// Генерируем UUID заранее
 	userUUID := uuid.New().String()
 
-	// Сначала создаем пользователя
 	user := models.User{
 		UUID:         userUUID,
 		Username:     request.Name,
@@ -89,7 +85,6 @@ func (uc *AuthController) Register(c *gin.Context) {
 		return
 	}
 
-	// Теперь создаем базу в database-service
 	dbRequest := CreateDatabaseRequest{
 		UserUUID: userUUID,
 		Name:     "default",
@@ -113,9 +108,16 @@ func (uc *AuthController) Register(c *gin.Context) {
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
-	if err != nil || resp.StatusCode != http.StatusOK {
-		log.Printf("Failed to create user DB: %v | Status: %v", err, resp.StatusCode)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user database"})
+	if err != nil {
+		log.Printf("Failed to make request to database service: %v", err)
+		c.JSON(http.StatusOK, gin.H{"message": "User registered successfully, but database creation failed"})
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		log.Printf("Database service returned non-OK status: %v", resp.StatusCode)
+		c.JSON(http.StatusOK, gin.H{"message": "User registered successfully, but database creation failed"})
 		return
 	}
 

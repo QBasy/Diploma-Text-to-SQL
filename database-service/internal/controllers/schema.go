@@ -1,3 +1,4 @@
+// Provides HTTP endpoints for fetching the schema from the user's SQLite database
 package controllers
 
 import (

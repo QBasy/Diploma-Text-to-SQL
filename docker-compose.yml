@@ -1,3 +1,5 @@
+version: '3.9'
+
 services:
   api:
     container_name: api-gateway
@@ -48,10 +50,10 @@ services:
     environment:
       - DB_HOST=db
       - DB_PORT=5432
-      - DB_USERNAME=postgres
+      - DB_USER=postgres
       - DB_PASSWORD=somepassword
       - DB_NAME=mvpdiploma
-      - API_GATEWAY_URL=api-gateway
+      - API_GATEWAY_URL=http://api-gateway:5001
       - SECRET_KEY=QKJORMCUTPQRM
       - JWT_SECRET=QKJORMCUTPQRMRTNHER
       - SERVER_PORT=5003
@@ -72,7 +74,6 @@ services:
       - db
     restart: always
 
-
   history_service:
     container_name: history_service-container
     build:
@@ -81,7 +82,7 @@ services:
     environment:
       - DB_HOST=db
       - DB_PORT=5432
-      - DB_USERNAME=postgres
+      - DB_USER=postgres
       - DB_PASSWORD=somepassword
       - DB_NAME=mvpdiploma
       - SECRET_KEY=YAKNOW
@@ -125,7 +126,7 @@ services:
     restart: always
 
   db:
-    image: postgres:latest
+    image: postgres:15
     environment:
       - POSTGRES_DB=mvpdiploma
       - POSTGRES_USER=postgres

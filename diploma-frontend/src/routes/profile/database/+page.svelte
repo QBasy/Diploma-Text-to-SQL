@@ -133,6 +133,10 @@
     }
 </script>
 
+<svelte:head>
+    <title>User Database Panel</title>
+</svelte:head>
+
 <div class="min-h-screen bg-gray-50">
     <div class="container max-w-full sm:max-w-6xl mx-auto p-3 sm:p-4 space-y-4">
         <div class="bg-white rounded-lg shadow-sm p-4 sm:p-6">

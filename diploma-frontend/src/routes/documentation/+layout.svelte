@@ -14,11 +14,7 @@
     };
 
     const services = [
-        { name: 'How to Start', path: '/documentation/start', icon: Play },
-        { name: 'Chart Types', path: '/documentation/charts', icon: ChartBar },
-        { name: 'Tech Stack', path: '/documentation/stack', icon: BookOpen },
-        { name: 'Configuration', path: '/documentation/configuration', icon: Settings },
-        { name: 'Database Connection', path: '/documentation/database', icon: Database }
+        { name: 'Chart Types', path: '/documentation/charts', icon: ChartBar }
     ];
 
     const currentPath = derived(page, ($page) => $page.url.pathname);

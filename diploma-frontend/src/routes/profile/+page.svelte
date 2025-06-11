@@ -103,6 +103,10 @@
     }
 </script>
 
+<svelte:head>
+    <title>User Profile</title>
+</svelte:head>
+
 <div class="container mx-auto p-4 md:p-6 max-w-3xl">
     <div class="flex items-center gap-3 mb-8">
         <UserCircle class="w-8 h-8 text-blue-600" />

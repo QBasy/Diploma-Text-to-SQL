@@ -3,6 +3,8 @@ package controllers
 import (
 	"auth-service/models"
 	"auth-service/utils"
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -28,7 +30,7 @@ type CreateDatabaseRequest struct {
 }
 
 type RegisterRequest struct {
-	Username string `json:"name" binding:"required"`
+	Name     string `json:"name" binding:"required"`
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required"`
 }
@@ -50,51 +52,74 @@ type ChangePasswordRequest struct {
 func (uc *AuthController) Register(c *gin.Context) {
 	var request RegisterRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
+		log.Printf("Binding error: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	log.Printf("Registering user: %s, %s", request.Username, request.Email)
+	log.Printf("Registering user: %s, %s", request.Name, request.Email)
 
+	// Проверяем, существует ли пользователь
 	var existingUser models.User
-	if err := uc.db.Where("username = ? OR email = ?", request.Username, request.Email).First(&existingUser).Error; err == nil {
+	if err := uc.db.Where("username = ? OR email = ?", request.Name, request.Email).First(&existingUser).Error; err == nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Username or email already exists"})
 		return
 	}
 
+	// Хэшируем пароль
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
 		return
 	}
 
+	// Генерируем UUID заранее
+	userUUID := uuid.New().String()
+
+	// Сначала создаем пользователя
 	user := models.User{
-		UUID:         uuid.New().String(),
-		Username:     request.Username,
+		UUID:         userUUID,
+		Username:     request.Name,
 		Email:        request.Email,
 		PasswordHash: string(hashedPassword),
 	}
+
 	if err := uc.db.Create(&user).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user"})
 		return
 	}
 
-	token := uuid.New().String()
-	expiry := time.Now().Add(3 * time.Hour)
-
-	verificationToken := models.EmailVerificationToken{
-		UserUUID: user.UUID,
-		Token:    token,
-		Expiry:   expiry,
-	}
-	if err := uc.db.Create(&verificationToken).Error; err != nil {
-		log.Printf("Failed to create email verification token: %v", err)
+	// Теперь создаем базу в database-service
+	dbRequest := CreateDatabaseRequest{
+		UserUUID: userUUID,
+		Name:     "default",
 	}
 
-	confirmURL := fmt.Sprintf("%s/api/auth/confirm-email?token=%s", utils.GetEnv("API_GATEWAY_URL", ""), token)
-	_ = utils.SendEmail(user.Email, "Email Verification", "Click the link to verify your email: "+confirmURL)
+	jsonBody, err := json.Marshal(dbRequest)
+	if err != nil {
+		log.Printf("JSON marshal error: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to prepare database creation request"})
+		return
+	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Check your email to confirm your account"})
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/api/database/create-database", utils.GetEnv("API_GATEWAY_URL", "")), bytes.NewBuffer(jsonBody))
+	if err != nil {
+		log.Printf("Request creation error: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create request to database service"})
+		return
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Auth-Service-Secret", utils.GetEnv("SECRET_KEY", ""))
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil || resp.StatusCode != http.StatusOK {
+		log.Printf("Failed to create user DB: %v | Status: %v", err, resp.StatusCode)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user database"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "User registered and database created"})
 }
 
 func (uc *AuthController) Login(c *gin.Context) {

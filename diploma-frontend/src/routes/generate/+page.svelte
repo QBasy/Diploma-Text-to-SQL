@@ -2,6 +2,10 @@
     import NavbarDocumentation from "$lib/components/NavbarDocumentation.svelte";
 </script>
 
+<svelte:head>
+    <title>Generate Query</title>
+</svelte:head>
+
 <NavbarDocumentation />
 <section class="flex-grow container mx-auto px-4 py-16">
     <h1 class="text-4xl font-bold text-center text-gray-800 mb-12">SQL Query Generation</h1>

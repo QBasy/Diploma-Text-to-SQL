@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"database-service/internal/models"
 	"database/sql"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -19,16 +18,10 @@ func (dc *DatabaseController) CreateDatabase(c *gin.Context) {
 		return
 	}
 
-	var user models.User
-	if err := dc.db.Where("uuid = ?", request.UserUUID).First(&user).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
-		return
-	}
-
 	databaseUUID := uuid.New().String()
 
 	dbFile := databaseUUID + ".sqlite"
-	dbPath := filepath.Join("databases", "user_databases", user.UUID, dbFile)
+	dbPath := filepath.Join("databases", "user_databases", request.UserUUID, dbFile)
 
 	if err := os.MkdirAll(filepath.Dir(dbPath), 0755); err != nil {
 		log.Printf("Failed to create database directory: %v", err)
@@ -51,7 +44,8 @@ func (dc *DatabaseController) CreateDatabase(c *gin.Context) {
 		return
 	}
 
-	if err := dc.db.Exec("INSERT INTO user_databases (user_uuid, uuid, name, path) VALUES (?, ?, ?, ?)", user.UUID, databaseUUID, request.Name, dbPath).Error; err != nil {
+	if err := dc.db.Exec("INSERT INTO user_databases (user_uuid, uuid, name, path) VALUES (?, ?, ?, ?)",
+		request.UserUUID, databaseUUID, request.Name, dbPath).Error; err != nil {
 		log.Printf("Failed to create database: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save database metadata"})
 		return

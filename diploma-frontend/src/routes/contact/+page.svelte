@@ -14,8 +14,8 @@
     const team = [
         {
             name: 'Aruzhan Yeleukeshova',
-            role: 'Project Manager, Designer',
-            description: 'Led the development of the user interface, implemented responsive design and user authentication.',
+            role: 'Frontend Engineer  and ML Integration Specialist',
+            description: 'Worked on frontend pages using SvelteKit and TailwindCSS, developed user authentication and layout pages, and prepared user documentation and design mockups.',
             image: '/profile-aruzhan.jpg',
             icon: Code,
             iconColor: 'text-blue-500',
@@ -27,21 +27,21 @@
         },
         {
             name: 'Sayat Adilkhanov',
-            role: 'Fullstack Developer',
-            description: 'Architected the Go microservices, implemented the SQL generation engine and database connectivity layers.',
+            role: 'Fullstack Developer & System Architect',
+            description: 'Developed core microservices in Go, implemented the API Gateway, authentication, database and history services, and also contributed significantly to frontend integration and testing.',
             image: '/profile-sayat.jpg',
             icon: Database,
             iconColor: 'text-green-500',
             links: {
-                github: "",
-                linkedin: "",
-                email: "",
+                github: "https://github.com/QBasy",
+                linkedin: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+                email: "c0mplexie1@gmail.com",
             }
         },
         {
             name: 'Guzal Mazhitova',
-            role: 'ML Engineer, Researcher',
-            description: 'Made research of the NLP & LLM models for text-to-SQL conversion, trained visualization recommendation algorithms.',
+            role: 'Visualization Developer & Backend Contributor',
+            description: 'Implemented the gRPC-based visualization service that transforms SQL query results into SVG charts, and contributed to integrating visualization into the backend workflow.',
             image: '/profile-guzal.jpg',
             icon: BarChart3,
             iconColor: 'text-purple-500',
@@ -63,6 +63,11 @@
 </script>
 
 <NavbarDocumentation />
+
+<svelte:head>
+    <title>Contacts</title>
+</svelte:head>
+
 
 <div class="container mx-auto px-6 py-16 w-11/12">
     <h1 class="text-4xl font-bold text-gray-800 mb-4">Meet the Team</h1>

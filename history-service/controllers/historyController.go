@@ -11,6 +11,7 @@ import (
 	"math"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -65,11 +66,9 @@ func (ctrl *HistoryController) GetHistory(c *gin.Context) {
 		return
 	}
 
-	// Parsing pagination parameters
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	perPage, _ := strconv.Atoi(c.DefaultQuery("per_page", "10"))
 
-	// Validate pagination params
 	if page < 1 {
 		page = 1
 	}
@@ -78,26 +77,54 @@ func (ctrl *HistoryController) GetHistory(c *gin.Context) {
 	}
 
 	databaseUUID := c.Query("database_uuid")
-	queryType := c.Query("query_type")
+
+	queryTypes := c.QueryArray("query_type[]")
+
+	successFilter := c.Query("success")
 	startDate := c.Query("start_date")
 	endDate := c.Query("end_date")
 	searchQuery := c.Query("search")
 
-	sortBy := c.DefaultQuery("sort_by", "timestamp")
-	sortDir := c.DefaultQuery("sort_dir", "DESC")
-
+	var sortClauses []string
 	validSortFields := map[string]bool{
 		"timestamp":  true,
 		"query_type": true,
 		"success":    true,
 	}
 
-	if !validSortFields[sortBy] {
-		sortBy = "timestamp"
+	sortIndex := 0
+	for {
+		sortBy := c.Query(fmt.Sprintf("sort_%d_by", sortIndex))
+		sortDir := c.Query(fmt.Sprintf("sort_%d_dir", sortIndex))
+
+		if sortBy == "" {
+			break
+		}
+
+		if !validSortFields[sortBy] {
+			sortBy = "timestamp"
+		}
+
+		if sortDir != "ASC" && sortDir != "DESC" {
+			sortDir = "DESC"
+		}
+
+		sortClauses = append(sortClauses, fmt.Sprintf("%s %s", sortBy, sortDir))
+		sortIndex++
 	}
 
-	if sortDir != "ASC" && sortDir != "DESC" {
-		sortDir = "DESC"
+	if len(sortClauses) == 0 {
+		sortBy := c.DefaultQuery("sort_by", "timestamp")
+		sortDir := c.DefaultQuery("sort_dir", "DESC")
+
+		if !validSortFields[sortBy] {
+			sortBy = "timestamp"
+		}
+		if sortDir != "ASC" && sortDir != "DESC" {
+			sortDir = "DESC"
+		}
+
+		sortClauses = append(sortClauses, fmt.Sprintf("%s %s", sortBy, sortDir))
 	}
 
 	query := ctrl.DB.Where("user_id = ?", userUUID)
@@ -106,8 +133,16 @@ func (ctrl *HistoryController) GetHistory(c *gin.Context) {
 		query = query.Where("database_uuid = ?", databaseUUID)
 	}
 
-	if queryType != "" {
-		query = query.Where("query_type = ?", queryType)
+	if len(queryTypes) > 0 {
+		query = query.Where("query_type IN ?", queryTypes)
+	}
+
+	if successFilter != "" {
+		if successFilter == "true" {
+			query = query.Where("success = ?", true)
+		} else if successFilter == "false" {
+			query = query.Where("success = ?", false)
+		}
 	}
 
 	if startDate != "" {
@@ -129,7 +164,9 @@ func (ctrl *HistoryController) GetHistory(c *gin.Context) {
 	}
 
 	var histories []models.QueryHistory
-	if err := query.Order(fmt.Sprintf("%s %s", sortBy, sortDir)).
+
+	orderClause := strings.Join(sortClauses, ", ")
+	if err := query.Order(orderClause).
 		Limit(perPage).
 		Offset((page - 1) * perPage).
 		Find(&histories).Error; err != nil {

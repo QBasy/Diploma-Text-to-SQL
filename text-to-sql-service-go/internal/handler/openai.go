@@ -44,7 +44,7 @@ func TextToSQLHandler(w http.ResponseWriter, r *http.Request) {
 
 	client := openai.NewClient(option.WithAPIKey(config.TTSQL.APIKey))
 
-	prompt, systemMessage := utils.CreatePrompt(req)
+	prompt, systemMessage := utils.CreateComplexPrompt(req)
 
 	chSQL := make(chan string)
 	go func() {

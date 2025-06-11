@@ -23,7 +23,7 @@ api.interceptors.response.use(
     async (response) => {
         const url = response.config.url;
 
-        if (url?.includes('/database/execute-sql') || url?.includes('/text-to-sql')) {
+        if (url?.includes('/execute-sql') || url?.includes('/text-to-sql') || url?.includes('/visualise')) {
             try {
                 await createHistoryEntry({
                     endpoint: url,

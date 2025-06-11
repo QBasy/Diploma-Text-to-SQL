@@ -37,7 +37,6 @@ export const executeQueryAPI = async (query: string): Promise<QueryResponse> => 
 };
 
 export const executeQueryVisualisation = async (query: string, databaseUUID: string = ""): Promise<VisualisationResponse> => {
-    console.log(databaseUUID)
     return api.post('/api/database/visualise', { query, databaseUUID });
 }
 

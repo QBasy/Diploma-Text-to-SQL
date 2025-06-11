@@ -2,9 +2,9 @@ package controller
 
 import (
 	"context"
-	"log"
 	pb "visualisation-service/generated/visualisationpb"
 	"visualisation-service/internal/service"
+	"visualisation-service/pkg/logger"
 )
 
 type Server struct {
@@ -12,10 +12,10 @@ type Server struct {
 }
 
 func (s *Server) GenerateChart(ctx context.Context, req *pb.QueryResult) (*pb.SVGResponse, error) {
-	log.Printf("1")
+	logger.InfoLogger.Printf("Запрос на генерацию графика получен")
 	svgBuffer, err := service.GenerateChart(req)
 	if err != nil {
-		log.Printf("error, %v", err)
+		logger.ErrorLogger.Printf("Ошибка генерации графика: %v", err)
 		return nil, err
 	}
 	return &pb.SVGResponse{Svg: svgBuffer.String()}, nil

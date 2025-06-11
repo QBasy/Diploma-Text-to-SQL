@@ -1,13 +1,12 @@
 package main
 
 import (
-	"database-service/routes"
-	"database-service/utils"
+	"database-service/internal/routes"
+	"database-service/pkg/utils"
 	"database/sql"
 	"fmt"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
-	_ "github.com/mattn/go-sqlite3"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"log"

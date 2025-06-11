@@ -3,10 +3,10 @@ package service
 import (
 	"bytes"
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 	pb "visualisation-service/generated/visualisationpb"
+	"visualisation-service/pkg/logger"
 )
 
 func GenerateChart(data *pb.QueryResult) (*bytes.Buffer, error) {
@@ -15,22 +15,19 @@ func GenerateChart(data *pb.QueryResult) (*bytes.Buffer, error) {
 	}
 
 	chartType := determineChartType(data.SqlQuery, data.Result)
+	logger.InfoLogger.Printf("Определен тип графика: %s", chartType)
 
 	switch chartType {
 	case ChartTypeBar:
-		log.Printf("error1")
 		return generateBarChart(data)
 	case ChartTypeLine:
-		log.Printf("error2")
 		return generateLineChart(data)
 	case ChartTypePie:
-		log.Printf("error3")
 		return generatePieChart(data)
 	case ChartTypeScatter:
-		log.Printf("error4")
 		return generateScatterChart(data)
 	default:
-		log.Printf("error5")
+		logger.WarnLogger.Printf("Не удалось определить тип графика. Используется Bar по умолчанию.")
 		return generateBarChart(data)
 	}
 }

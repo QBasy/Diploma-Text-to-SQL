@@ -174,7 +174,7 @@
             }
 
             console.log("Using schema for query:", schema);
-            const response: TextToSQLRequest = await generateComplexSQLbyGPT(naturalLanguageQuery, schema);
+            const response: TextToSQLRequest = await generateComplexSQLbyGPT(naturalLanguageQuery+", DONT USE NOT EXISTING TABLES OR COLUMNS", schema);
             console.log("Generated SQL response:", response);
             sqlQuery = response.sql;
 
